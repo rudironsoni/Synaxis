@@ -59,7 +59,7 @@ public sealed class PostgreSqlEventStore : IEventStore
         }
 
         // Use optimistic concurrency with a PostgreSQL advisory lock
-        var connection = _dbContext.Database.GetDbConnection();
+        var connection = this._dbContext.Database.GetDbConnection();
         await EnsureConnectionOpenAsync(connection, cancellationToken);
 
         await using var transaction = await connection.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
@@ -67,7 +67,7 @@ public sealed class PostgreSqlEventStore : IEventStore
         try
         {
             // Get the current version using advisory lock for stream consistency
-            var currentVersion = await GetCurrentVersionAsync(connection, streamId, transaction, cancellationToken);
+            var currentVersion = await this.GetCurrentVersionAsync(connection, streamId, transaction, cancellationToken);
 
             if (currentVersion != expectedVersion)
             {
@@ -107,7 +107,7 @@ public sealed class PostgreSqlEventStore : IEventStore
             throw new ArgumentException("Stream ID cannot be null or empty", nameof(streamId));
         }
 
-        var connection = _dbContext.Database.GetDbConnection();
+        var connection = this._dbContext.Database.GetDbConnection();
         await EnsureConnectionOpenAsync(connection, cancellationToken);
 
         const string sql = @"
@@ -132,7 +132,7 @@ public sealed class PostgreSqlEventStore : IEventStore
         long fromPosition = 0,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var connection = _dbContext.Database.GetDbConnection();
+        var connection = this._dbContext.Database.GetDbConnection();
         await EnsureConnectionOpenAsync(connection, cancellationToken);
 
         const string sql = @"
@@ -159,7 +159,7 @@ public sealed class PostgreSqlEventStore : IEventStore
     /// <param name="transaction">The database transaction.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The current version, or -1 if the stream doesn't exist.</returns>
-    private static async Task<long> GetCurrentVersionAsync(
+    private async Task<long> GetCurrentVersionAsync(
         IDbConnection connection,
         string streamId,
         IDbTransaction transaction,
@@ -195,7 +195,7 @@ public sealed class PostgreSqlEventStore : IEventStore
 
         await using var command = new NpgsqlCommand(sql, (NpgsqlConnection)connection, (NpgsqlTransaction)transaction);
 
-        var eventDataJson = _serializer.Serialize(envelope.EventData);
+        var eventDataJson = this._serializer.Serialize(envelope.EventData);
         var metadataJson = envelope.Metadata is not null
             ? JsonSerializer.Serialize(envelope.Metadata)
             : null;
@@ -227,13 +227,13 @@ public sealed class PostgreSqlEventStore : IEventStore
         var eventId = reader.GetGuid(8);
 
         // Deserialize event data
-        var eventTypeResolved = _serializer.ResolveType(eventType);
+        var eventTypeResolved = this._serializer.ResolveType(eventType);
         if (eventTypeResolved is null)
         {
             throw new InvalidOperationException($"Could not resolve event type: {eventType}");
         }
 
-        var eventData = _serializer.Deserialize(eventDataJson, eventTypeResolved);
+        var eventData = this._serializer.Deserialize(eventDataJson, eventTypeResolved);
         var metadata = metadataJson is not null
             ? JsonSerializer.Deserialize<EventMetadata>(metadataJson)
             : new EventMetadata();

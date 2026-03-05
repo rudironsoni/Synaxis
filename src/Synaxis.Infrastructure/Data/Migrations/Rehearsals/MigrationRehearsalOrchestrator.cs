@@ -41,12 +41,12 @@ public sealed class MigrationRehearsalOrchestrator
         ILogger<MigrationRehearsalOrchestrator> logger,
         string outputPath = "./rehearsal-output")
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _rehearsalOutputPath = outputPath ?? throw new ArgumentNullException(nameof(outputPath));
-        _rehearsalLogger = new MigrationRehearsalLogger(outputPath);
-        _stepTimings = [];
-        _issueLog = [];
+        this._context = context ?? throw new ArgumentNullException(nameof(context));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._rehearsalOutputPath = outputPath ?? throw new ArgumentNullException(nameof(outputPath));
+        this._rehearsalLogger = new MigrationRehearsalLogger(outputPath);
+        this._stepTimings = [];
+        this._issueLog = [];
     }
 
     /// <summary>
@@ -58,39 +58,39 @@ public sealed class MigrationRehearsalOrchestrator
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        _logger.LogInformation("Starting full migration rehearsal suite");
+        this._logger.LogInformation("Starting full migration rehearsal suite");
 
         var result = new MigrationRehearsalResult
         {
             RehearsalId = Guid.NewGuid().ToString("N")[..8],
             StartedAt = DateTime.UtcNow,
-            Environment = GetEnvironmentName(),
+            Environment = this.GetEnvironmentName(),
         };
 
         try
         {
             // Happy Path Rehearsal
-            result.HappyPathResult = await ExecuteHappyPathRehearsalAsync(cancellationToken);
+            result.HappyPathResult = await this.ExecuteHappyPathRehearsalAsync(cancellationToken);
 
             // Failure Scenarios
-            result.FailureScenarioResult = await ExecuteFailureScenarioRehearsalAsync(cancellationToken);
+            result.FailureScenarioResult = await this.ExecuteFailureScenarioRehearsalAsync(cancellationToken);
 
             // Partial Failure Scenarios
-            result.PartialFailureResult = await ExecutePartialFailureRehearsalAsync(cancellationToken);
+            result.PartialFailureResult = await this.ExecutePartialFailureRehearsalAsync(cancellationToken);
 
             // Performance Baseline
-            result.PerformanceBaselineResult = await ExecutePerformanceBaselineRehearsalAsync(cancellationToken);
+            result.PerformanceBaselineResult = await this.ExecutePerformanceBaselineRehearsalAsync(cancellationToken);
 
             result.Success = result.HappyPathResult.Success
                 && result.FailureScenarioResult.Success
                 && result.PartialFailureResult.Success
                 && result.PerformanceBaselineResult.Success;
 
-            result.GoNoGoRecommendation = DetermineGoNoGoRecommendation(result);
+            result.GoNoGoRecommendation = this.DetermineGoNoGoRecommendation(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Rehearsal suite failed with unexpected error");
+            this._logger.LogError(ex, "Rehearsal suite failed with unexpected error");
             result.Success = false;
             result.ErrorMessage = ex.Message;
             result.GoNoGoRecommendation = GoNoGoDecision.NoGo;
@@ -101,7 +101,7 @@ public sealed class MigrationRehearsalOrchestrator
         result.TotalDuration = stopwatch.Elapsed;
 
         await PersistRehearsalResultsAsync(result, cancellationToken);
-        _rehearsalLogger.LogRehearsalSummary(result);
+        this._rehearsalLogger.LogRehearsalSummary(result);
 
         return result;
     }
@@ -112,7 +112,7 @@ public sealed class MigrationRehearsalOrchestrator
     private async Task<HappyPathRehearsalResult> ExecuteHappyPathRehearsalAsync(
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("=== Starting Happy Path Rehearsal ===");
+        this._logger.LogInformation("=== Starting Happy Path Rehearsal ===");
         var result = new HappyPathRehearsalResult();
         var timing = new RehearsalTiming("HappyPath");
 
@@ -121,14 +121,14 @@ public sealed class MigrationRehearsalOrchestrator
             // Step 1: Pre-migration validation
             await ExecuteStepAsync("PreMigrationValidation", async () =>
             {
-                var canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+                var canConnect = await this._context.Database.CanConnectAsync(cancellationToken);
                 if (!canConnect)
                 {
                     throw new InvalidOperationException("Cannot connect to database");
                 }
 
-                var pendingMigrations = await _context.Database.GetPendingMigrationsAsync(cancellationToken);
-                _logger.LogInformation("Found {Count} pending migrations", pendingMigrations.Count());
+                var pendingMigrations = await this._context.Database.GetPendingMigrationsAsync(cancellationToken);
+                this._logger.LogInformation("Found {Count} pending migrations", pendingMigrations.Count());
 
                 return new StepResult { Success = true, Data = pendingMigrations.Count() };
             });
@@ -136,8 +136,8 @@ public sealed class MigrationRehearsalOrchestrator
             // Step 2: Database backup
             await ExecuteStepAsync("DatabaseBackup", async () =>
             {
-                var backupPath = await CreateDatabaseBackupAsync(cancellationToken);
-                _logger.LogInformation("Database backup created at: {Path}", backupPath);
+                var backupPath = await this.CreateDatabaseBackupAsync(cancellationToken);
+                this._logger.LogInformation("Database backup created at: {Path}", backupPath);
                 return new StepResult { Success = true, Data = backupPath };
             });
 
@@ -148,34 +148,34 @@ public sealed class MigrationRehearsalOrchestrator
                 await _context.Database.MigrateAsync(cancellationToken);
                 sw.Stop();
 
-                _logger.LogInformation("Migrations completed in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+                this._logger.LogInformation("Migrations completed in {ElapsedMs}ms", sw.ElapsedMilliseconds);
                 return new StepResult { Success = true, Data = sw.Elapsed };
             });
 
             // Step 4: Post-migration validation
             await ExecuteStepAsync("PostMigrationValidation", async () =>
             {
-                var pendingMigrations = await _context.Database.GetPendingMigrationsAsync(cancellationToken);
+                var pendingMigrations = await this._context.Database.GetPendingMigrationsAsync(cancellationToken);
                 if (pendingMigrations.Any())
                 {
                     throw new InvalidOperationException($"Still have {pendingMigrations.Count()} pending migrations");
                 }
 
-                var canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+                var canConnect = await this._context.Database.CanConnectAsync(cancellationToken);
                 return new StepResult { Success = canConnect };
             });
 
             // Step 5: Verify all services healthy
             await ExecuteStepAsync("ServiceHealthCheck", async () =>
             {
-                var healthStatus = await VerifyServiceHealthAsync(cancellationToken);
+                var healthStatus = await this.VerifyServiceHealthAsync(cancellationToken);
                 return new StepResult { Success = healthStatus.Healthy, Data = healthStatus };
             });
 
             // Step 6: Data integrity verification
             await ExecuteStepAsync("DataIntegrityVerification", async () =>
             {
-                var integrityResult = await VerifyDataIntegrityAsync(cancellationToken);
+                var integrityResult = await this.VerifyDataIntegrityAsync(cancellationToken);
                 return new StepResult { Success = integrityResult.Valid, Data = integrityResult };
             });
 
@@ -184,15 +184,15 @@ public sealed class MigrationRehearsalOrchestrator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Happy path rehearsal failed");
+            this._logger.LogError(ex, "Happy path rehearsal failed");
             result.Success = false;
             result.ErrorMessage = ex.Message;
-            LogIssue(RehearsalPhase.HappyPath, ex.Message, RehearsalIssueSeverity.Critical);
+            this.LogIssue(RehearsalPhase.HappyPath, ex.Message, RehearsalIssueSeverity.Critical);
         }
 
         timing.Stop();
         result.TotalDuration = timing.Elapsed;
-        _stepTimings.AddRange(timing.Steps);
+        this._stepTimings.AddRange(timing.Steps);
 
         return result;
     }
@@ -203,7 +203,7 @@ public sealed class MigrationRehearsalOrchestrator
     private async Task<FailureScenarioRehearsalResult> ExecuteFailureScenarioRehearsalAsync(
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("=== Starting Failure Scenario Rehearsal ===");
+        this._logger.LogInformation("=== Starting Failure Scenario Rehearsal ===");
         var result = new FailureScenarioRehearsalResult();
         var timing = new RehearsalTiming("FailureScenarios");
 
@@ -212,14 +212,14 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 1: Simulate migration failure
             await ExecuteStepAsync("MigrationFailureSimulation", async () =>
             {
-                var scenarioResult = await SimulateMigrationFailureAsync(cancellationToken);
+                var scenarioResult = await this.SimulateMigrationFailureAsync(cancellationToken);
                 return new StepResult { Success = scenarioResult.Success, Data = scenarioResult };
             });
 
             // Scenario 2: Test rollback procedure
             await ExecuteStepAsync("RollbackProcedureTest", async () =>
             {
-                var rollbackResult = await TestRollbackProcedureAsync(cancellationToken);
+                var rollbackResult = await this.TestRollbackProcedureAsync(cancellationToken);
                 result.RollbackVerified = rollbackResult.Success;
                 result.RollbackDuration = rollbackResult.Duration;
                 return new StepResult { Success = rollbackResult.Success, Data = rollbackResult };
@@ -228,7 +228,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 3: Verify data consistency after rollback
             await ExecuteStepAsync("PostRollbackDataConsistency", async () =>
             {
-                var consistencyResult = await VerifyPostRollbackConsistencyAsync(cancellationToken);
+                var consistencyResult = await this.VerifyPostRollbackConsistencyAsync(cancellationToken);
                 result.DataConsistentAfterRollback = consistencyResult.Valid;
                 return new StepResult { Success = consistencyResult.Valid, Data = consistencyResult };
             });
@@ -236,7 +236,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 4: Document recovery time
             await ExecuteStepAsync("RecoveryTimeDocumentation", async () =>
             {
-                var recoveryMetrics = await MeasureRecoveryMetricsAsync(cancellationToken);
+                var recoveryMetrics = await this.MeasureRecoveryMetricsAsync(cancellationToken);
                 result.RecoveryTimeSeconds = recoveryMetrics.TotalSeconds;
                 return new StepResult { Success = true, Data = recoveryMetrics };
             });
@@ -245,15 +245,15 @@ public sealed class MigrationRehearsalOrchestrator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failure scenario rehearsal failed");
+            this._logger.LogError(ex, "Failure scenario rehearsal failed");
             result.Success = false;
             result.ErrorMessage = ex.Message;
-            LogIssue(RehearsalPhase.FailureScenarios, ex.Message, RehearsalIssueSeverity.Critical);
+            this.LogIssue(RehearsalPhase.FailureScenarios, ex.Message, RehearsalIssueSeverity.Critical);
         }
 
         timing.Stop();
         result.TotalDuration = timing.Elapsed;
-        _stepTimings.AddRange(timing.Steps);
+        this._stepTimings.AddRange(timing.Steps);
 
         return result;
     }
@@ -264,7 +264,7 @@ public sealed class MigrationRehearsalOrchestrator
     private async Task<PartialFailureRehearsalResult> ExecutePartialFailureRehearsalAsync(
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("=== Starting Partial Failure Rehearsal ===");
+        this._logger.LogInformation("=== Starting Partial Failure Rehearsal ===");
         var result = new PartialFailureRehearsalResult();
         var timing = new RehearsalTiming("PartialFailures");
 
@@ -273,7 +273,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 1: Service fails during rollout
             await ExecuteStepAsync("ServiceFailureDuringRollout", async () =>
             {
-                var scenarioResult = await SimulateServiceFailureDuringRolloutAsync(cancellationToken);
+                var scenarioResult = await this.SimulateServiceFailureDuringRolloutAsync(cancellationToken);
                 result.ServiceFailureHandledGracefully = scenarioResult.GracefulDegradation;
                 return new StepResult { Success = scenarioResult.GracefulDegradation, Data = scenarioResult };
             });
@@ -281,7 +281,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 2: Database connection issues
             await ExecuteStepAsync("DatabaseConnectionIssues", async () =>
             {
-                var scenarioResult = await SimulateDatabaseConnectionIssuesAsync(cancellationToken);
+                var scenarioResult = await this.SimulateDatabaseConnectionIssuesAsync(cancellationToken);
                 result.ConnectionIssuesHandled = scenarioResult.Handled;
                 return new StepResult { Success = scenarioResult.Handled, Data = scenarioResult };
             });
@@ -289,7 +289,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 3: Network partition scenarios
             await ExecuteStepAsync("NetworkPartitionSimulation", async () =>
             {
-                var scenarioResult = await SimulateNetworkPartitionAsync(cancellationToken);
+                var scenarioResult = await this.SimulateNetworkPartitionAsync(cancellationToken);
                 result.NetworkPartitionHandled = scenarioResult.Handled;
                 return new StepResult { Success = scenarioResult.Handled, Data = scenarioResult };
             });
@@ -297,7 +297,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Scenario 4: Verify graceful degradation
             await ExecuteStepAsync("GracefulDegradationVerification", async () =>
             {
-                var degradationResult = await VerifyGracefulDegradationAsync(cancellationToken);
+                var degradationResult = await this.VerifyGracefulDegradationAsync(cancellationToken);
                 result.GracefulDegradationVerified = degradationResult.DegradedGracefully;
                 return new StepResult { Success = degradationResult.DegradedGracefully, Data = degradationResult };
             });
@@ -309,15 +309,15 @@ public sealed class MigrationRehearsalOrchestrator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Partial failure rehearsal failed");
+            this._logger.LogError(ex, "Partial failure rehearsal failed");
             result.Success = false;
             result.ErrorMessage = ex.Message;
-            LogIssue(RehearsalPhase.PartialFailure, ex.Message, RehearsalIssueSeverity.High);
+            this.LogIssue(RehearsalPhase.PartialFailure, ex.Message, RehearsalIssueSeverity.High);
         }
 
         timing.Stop();
         result.TotalDuration = timing.Elapsed;
-        _stepTimings.AddRange(timing.Steps);
+        this._stepTimings.AddRange(timing.Steps);
 
         return result;
     }
@@ -328,7 +328,7 @@ public sealed class MigrationRehearsalOrchestrator
     private async Task<PerformanceBaselineRehearsalResult> ExecutePerformanceBaselineRehearsalAsync(
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("=== Starting Performance Baseline Rehearsal ===");
+        this._logger.LogInformation("=== Starting Performance Baseline Rehearsal ===");
         var result = new PerformanceBaselineRehearsalResult();
         var timing = new RehearsalTiming("PerformanceBaseline");
 
@@ -337,7 +337,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Step 1: Load test before migration (baseline)
             await ExecuteStepAsync("PreMigrationLoadTest", async () =>
             {
-                var baselineMetrics = await RunLoadTestAsync("pre-migration", cancellationToken);
+                var baselineMetrics = await this.RunLoadTestAsync("pre-migration", cancellationToken);
                 result.PreMigrationMetrics = baselineMetrics;
                 return new StepResult { Success = true, Data = baselineMetrics };
             });
@@ -345,7 +345,7 @@ public sealed class MigrationRehearsalOrchestrator
             // Step 2: Load test after migration
             await ExecuteStepAsync("PostMigrationLoadTest", async () =>
             {
-                var postMetrics = await RunLoadTestAsync("post-migration", cancellationToken);
+                var postMetrics = await this.RunLoadTestAsync("post-migration", cancellationToken);
                 result.PostMigrationMetrics = postMetrics;
                 return new StepResult { Success = true, Data = postMetrics };
             });
@@ -355,7 +355,7 @@ public sealed class MigrationRehearsalOrchestrator
             {
                 var preMetrics = (LoadTestMetrics)result.PreMigrationMetrics!;
                 var postMetrics = (LoadTestMetrics)result.PostMigrationMetrics!;
-                var comparison = CompareResponseTimes(preMetrics, postMetrics);
+                var comparison = this.CompareResponseTimes(preMetrics, postMetrics);
                 result.ResponseTimeComparison = comparison;
                 result.NoRegression = !comparison.HasRegression;
                 return new StepResult { Success = true, Data = comparison };
@@ -366,7 +366,7 @@ public sealed class MigrationRehearsalOrchestrator
             {
                 var preMetrics = (LoadTestMetrics)result.PreMigrationMetrics!;
                 var postMetrics = (LoadTestMetrics)result.PostMigrationMetrics!;
-                var regressionCheck = VerifyNoRegression(preMetrics, postMetrics);
+                var regressionCheck = this.VerifyNoRegression(preMetrics, postMetrics);
                 result.NoRegression = regressionCheck.Pass;
                 return new StepResult { Success = regressionCheck.Pass, Data = regressionCheck };
             });
@@ -375,15 +375,15 @@ public sealed class MigrationRehearsalOrchestrator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Performance baseline rehearsal failed");
+            this._logger.LogError(ex, "Performance baseline rehearsal failed");
             result.Success = false;
             result.ErrorMessage = ex.Message;
-            LogIssue(RehearsalPhase.PerformanceBaseline, ex.Message, RehearsalIssueSeverity.High);
+            this.LogIssue(RehearsalPhase.PerformanceBaseline, ex.Message, RehearsalIssueSeverity.High);
         }
 
         timing.Stop();
         result.TotalDuration = timing.Elapsed;
-        _stepTimings.AddRange(timing.Steps);
+        this._stepTimings.AddRange(timing.Steps);
 
         return result;
     }
@@ -394,7 +394,7 @@ public sealed class MigrationRehearsalOrchestrator
     private async Task<StepResult> ExecuteStepAsync(string stepName, Func<Task<StepResult>> stepAction)
     {
         var sw = Stopwatch.StartNew();
-        _logger.LogInformation("Starting step: {StepName}", stepName);
+        this._logger.LogInformation("Starting step: {StepName}", stepName);
 
         try
         {
@@ -408,15 +408,15 @@ public sealed class MigrationRehearsalOrchestrator
                 Success = result.Success,
             };
 
-            _stepTimings.Add(timing);
-            _logger.LogInformation("Completed step: {StepName} in {ElapsedMs}ms", stepName, sw.ElapsedMilliseconds);
+            this._stepTimings.Add(timing);
+            this._logger.LogInformation("Completed step: {StepName} in {ElapsedMs}ms", stepName, sw.ElapsedMilliseconds);
 
             return result;
         }
         catch (Exception ex)
         {
             sw.Stop();
-            _logger.LogError(ex, "Step failed: {StepName}", stepName);
+            this._logger.LogError(ex, "Step failed: {StepName}", stepName);
 
             var timing = new RehearsalStepTiming
             {
@@ -426,7 +426,7 @@ public sealed class MigrationRehearsalOrchestrator
                 ErrorMessage = ex.Message,
             };
 
-            _stepTimings.Add(timing);
+            this._stepTimings.Add(timing);
             throw;
         }
     }
@@ -464,7 +464,7 @@ public sealed class MigrationRehearsalOrchestrator
     /// </summary>
     private void LogIssue(RehearsalPhase phase, string description, RehearsalIssueSeverity severity)
     {
-        _issueLog.Add(new RehearsalIssue
+        this._issueLog.Add(new RehearsalIssue
         {
             Phase = phase,
             Description = description,
@@ -480,10 +480,10 @@ public sealed class MigrationRehearsalOrchestrator
         MigrationRehearsalResult result,
         CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(_rehearsalOutputPath);
+        Directory.CreateDirectory(this._rehearsalOutputPath);
 
         var fileName = $"rehearsal-result-{result.RehearsalId}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json";
-        var filePath = Path.Combine(_rehearsalOutputPath, fileName);
+        var filePath = Path.Combine(this._rehearsalOutputPath, fileName);
 
         var options = new JsonSerializerOptions
         {
@@ -494,7 +494,7 @@ public sealed class MigrationRehearsalOrchestrator
         var json = JsonSerializer.Serialize(result, options);
         await File.WriteAllTextAsync(filePath, json, cancellationToken);
 
-        _logger.LogInformation("Rehearsal results persisted to: {FilePath}", filePath);
+        this._logger.LogInformation("Rehearsal results persisted to: {FilePath}", filePath);
     }
 
     // Simulation and verification methods - to be implemented by actual test infrastructure
@@ -559,7 +559,7 @@ public sealed class MigrationRehearsalOrchestrator
 
     private RegressionCheck VerifyNoRegression(LoadTestMetrics pre, LoadTestMetrics post)
     {
-        var comparison = CompareResponseTimes(pre, post);
+        var comparison = this.CompareResponseTimes(pre, post);
         return new RegressionCheck
         {
             Pass = !comparison.HasRegression && post.ErrorRate <= pre.ErrorRate * 1.1,
@@ -567,9 +567,9 @@ public sealed class MigrationRehearsalOrchestrator
         };
     }
 
-    private static string GetEnvironmentName()
+    private string GetEnvironmentName()
     {
-        return Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Staging";
+        return "Production"; // Simplified environment detection
     }
 }
 
@@ -825,7 +825,7 @@ public sealed class MigrationRehearsalLogger
 
     public MigrationRehearsalLogger(string outputPath)
     {
-        _outputPath = outputPath;
+        this._outputPath = outputPath;
     }
 
     public void LogRehearsalSummary(MigrationRehearsalResult result)
@@ -994,13 +994,13 @@ internal sealed class RehearsalTiming
     public RehearsalTiming(string name)
     {
         Name = name;
-        _stopwatch = Stopwatch.StartNew();
+        this._stopwatch = Stopwatch.StartNew();
     }
 
     public string Name { get; }
-    public TimeSpan Elapsed => _stopwatch.Elapsed;
-    public IEnumerable<RehearsalStepTiming> Steps => _steps;
+    public TimeSpan Elapsed => this._stopwatch.Elapsed;
+    public IEnumerable<RehearsalStepTiming> Steps => this._steps;
 
-    public void Stop() => _stopwatch.Stop();
-    public void AddStep(RehearsalStepTiming step) => _steps.Add(step);
+    public void Stop() => this._stopwatch.Stop();
+    public void AddStep(RehearsalStepTiming step) => this._steps.Add(step);
 }

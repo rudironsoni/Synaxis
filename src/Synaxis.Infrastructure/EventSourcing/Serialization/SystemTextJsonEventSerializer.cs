@@ -24,7 +24,7 @@ public sealed class SystemTextJsonEventSerializer : IEventSerializer
     /// <param name="options">Optional JSON serializer options.</param>
     public SystemTextJsonEventSerializer(JsonSerializerOptions? options = null)
     {
-        _options = options ?? CreateDefaultOptions();
+        this._options = options ?? this.CreateDefaultOptions();
     }
 
     /// <inheritdoc/>
@@ -36,7 +36,7 @@ public sealed class SystemTextJsonEventSerializer : IEventSerializer
             throw new ArgumentNullException(nameof(@event));
         }
 
-        return JsonSerializer.Serialize(@event, _options);
+        return JsonSerializer.Serialize(@event, this._options);
     }
 
     /// <inheritdoc/>
@@ -52,7 +52,7 @@ public sealed class SystemTextJsonEventSerializer : IEventSerializer
             throw new ArgumentNullException(nameof(eventType));
         }
 
-        var result = JsonSerializer.Deserialize(json, eventType, _options);
+        var result = JsonSerializer.Deserialize(json, eventType, this._options);
 
         if (result is null)
         {
@@ -109,7 +109,7 @@ public sealed class SystemTextJsonEventSerializer : IEventSerializer
     /// Creates default JSON serializer options with polymorphic support.
     /// </summary>
     /// <returns>The configured options.</returns>
-    private static JsonSerializerOptions CreateDefaultOptions()
+    private JsonSerializerOptions CreateDefaultOptions()
     {
         var options = new JsonSerializerOptions
         {

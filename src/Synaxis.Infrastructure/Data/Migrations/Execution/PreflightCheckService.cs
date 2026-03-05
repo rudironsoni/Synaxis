@@ -85,8 +85,8 @@ public sealed class PreflightCheckService : IPreflightCheckService
         ILogger<PreflightCheckService> logger,
         IMigrationExecutionService executionService)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _executionService = executionService ?? throw new ArgumentNullException(nameof(executionService));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._executionService = executionService ?? throw new ArgumentNullException(nameof(executionService));
     }
 
     /// <inheritdoc/>
@@ -105,20 +105,20 @@ public sealed class PreflightCheckService : IPreflightCheckService
             throw new ArgumentNullException(nameof(options));
         }
 
-        _logger.LogInformation("Starting pre-flight checks for migration to environment: {Environment}", options.Environment);
+        this._logger.LogInformation("Starting pre-flight checks for migration to environment: {Environment}", options.Environment);
 
         var checks = new List<PreflightCheck>();
         var overallStopwatch = Stopwatch.StartNew();
 
         // Run each check
-        checks.Add(await RunEnvironmentCheckAsync(options, cancellationToken));
-        checks.Add(await RunRequiredToolsCheckAsync(cancellationToken));
-        checks.Add(await RunConnectionStringCheckAsync(options, cancellationToken));
-        checks.Add(await RunDatabaseConnectivityCheckAsync(options, cancellationToken));
-        checks.Add(await RunMigrationInfrastructureCheckAsync(options, cancellationToken));
-        checks.Add(await RunBackupDirectoryCheckAsync(options, cancellationToken));
-        checks.Add(await RunRollbackPlanCheckAsync(options, cancellationToken));
-        checks.Add(await RunDiskSpaceCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunEnvironmentCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunRequiredToolsCheckAsync(cancellationToken));
+        checks.Add(await this.RunConnectionStringCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunDatabaseConnectivityCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunMigrationInfrastructureCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunBackupDirectoryCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunRollbackPlanCheckAsync(options, cancellationToken));
+        checks.Add(await this.RunDiskSpaceCheckAsync(options, cancellationToken));
 
         overallStopwatch.Stop();
 
@@ -145,15 +145,15 @@ public sealed class PreflightCheckService : IPreflightCheckService
         {
             if (check.Result == PreflightCheckResult.Failed)
             {
-                _executionService.RecordIssue(log, IssueSeverity.Critical, check.Message ?? "Check failed", "Preflight");
+                this._executionService.RecordIssue(log, IssueSeverity.Critical, check.Message ?? "Check failed", "Preflight");
             }
             else if (check.Result == PreflightCheckResult.Warning)
             {
-                _executionService.RecordIssue(log, IssueSeverity.Warning, check.Message ?? "Check warning", "Preflight");
+                this._executionService.RecordIssue(log, IssueSeverity.Warning, check.Message ?? "Check warning", "Preflight");
             }
         }
 
-        _logger.LogInformation(
+        this._logger.LogInformation(
             "Pre-flight checks completed in {ElapsedMs}ms with status: {Status}",
             overallStopwatch.ElapsedMilliseconds,
             status);
@@ -196,7 +196,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
 
         foreach (var tool in requiredTools)
         {
-            if (!await ToolExistsAsync(tool, cancellationToken))
+            if (!await this.ToolExistsAsync(tool, cancellationToken))
             {
                 missingTools.Add(tool);
             }
@@ -454,7 +454,7 @@ public sealed class PreflightCheckService : IPreflightCheckService
         }
     }
 
-    private static async Task<bool> ToolExistsAsync(string _tool, CancellationToken cancellationToken)
+    private async Task<bool> ToolExistsAsync(string _tool, CancellationToken cancellationToken)
     {
         try
         {

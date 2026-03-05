@@ -1,5 +1,5 @@
 ---
-mode: subagent
+mode: primary
 hidden: false
 tools:
   bash: true

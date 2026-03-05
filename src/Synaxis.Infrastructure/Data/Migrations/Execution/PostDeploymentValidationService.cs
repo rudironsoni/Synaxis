@@ -155,9 +155,9 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
         IMigrationExecutionService executionService,
         HttpClient httpClient)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _executionService = executionService ?? throw new ArgumentNullException(nameof(executionService));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._executionService = executionService ?? throw new ArgumentNullException(nameof(executionService));
+        this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
     /// <inheritdoc/>
@@ -176,7 +176,7 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
             throw new ArgumentNullException(nameof(options));
         }
 
-        _logger.LogInformation("Starting post-deployment validation");
+        this._logger.LogInformation("Starting post-deployment validation");
 
         var results = new PostDeploymentResults
         {
@@ -186,18 +186,18 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
         var overallStopwatch = Stopwatch.StartNew();
 
         // Run health checks
-        var healthChecks = await RunHealthChecksAsync(options, cancellationToken);
+        var healthChecks = await this.RunHealthChecksAsync(options, cancellationToken);
         results.HealthChecks.AddRange(healthChecks);
 
         // Run smoke tests
-        var smokeTests = await RunSmokeTestsAsync(options, cancellationToken);
+        var smokeTests = await this.RunSmokeTestsAsync(options, cancellationToken);
         results.SmokeTests.AddRange(smokeTests);
 
         // Check error rates
-        results.ErrorRateCheck = await CheckErrorRatesAsync(options, cancellationToken);
+        results.ErrorRateCheck = await this.CheckErrorRatesAsync(options, cancellationToken);
 
         // Validate performance
-        results.PerformanceValidation = await ValidatePerformanceAsync(options, cancellationToken);
+        results.PerformanceValidation = await this.ValidatePerformanceAsync(options, cancellationToken);
 
         overallStopwatch.Stop();
 
@@ -223,22 +223,22 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
         foreach (var check in results.HealthChecks.Where(h => h.Status != HealthStatus.Healthy))
         {
             var severity = check.Status == HealthStatus.Unhealthy ? IssueSeverity.Error : IssueSeverity.Warning;
-            _executionService.RecordIssue(log, severity, check.Error ?? $"Health check {check.Service} is {check.Status}", "PostDeployment");
+            this._executionService.RecordIssue(log, severity, check.Error ?? $"Health check {check.Service} is {check.Status}", "PostDeployment");
         }
 
         foreach (var test in results.SmokeTests.Where(t => t.Status == TestStatus.Failed))
         {
-            _executionService.RecordIssue(log, IssueSeverity.Warning, test.Error ?? $"Smoke test {test.Test} failed", "PostDeployment");
+            this._executionService.RecordIssue(log, IssueSeverity.Warning, test.Error ?? $"Smoke test {test.Test} failed", "PostDeployment");
         }
 
         if (results.ErrorRateCheck?.Status != CheckStatus.Passed)
         {
-            _executionService.RecordIssue(log, IssueSeverity.Warning,
+            this._executionService.RecordIssue(log, IssueSeverity.Warning,
                 $"Error rate check: {results.ErrorRateCheck?.ErrorRate:F2}% (threshold: {results.ErrorRateCheck?.Threshold:F2}%)",
                 "PostDeployment");
         }
 
-        _logger.LogInformation(
+        this._logger.LogInformation(
             "Post-deployment validation completed in {ElapsedMs}ms with status: {Status}",
             overallStopwatch.ElapsedMilliseconds,
             results.Status);
@@ -263,7 +263,7 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
                 using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(options.TimeoutSeconds));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
 
-                var response = await _httpClient.GetAsync(endpoint.Url, linkedCts.Token);
+                var response = await this._httpClient.GetAsync(endpoint.Url, linkedCts.Token);
                 stopwatch.Stop();
 
                 if (response.StatusCode == (System.Net.HttpStatusCode)endpoint.ExpectedStatusCode)
@@ -297,7 +297,7 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
                 Error = error
             });
 
-            _logger.LogDebug(
+            this._logger.LogDebug(
                 "Health check for {Service}: {Status} ({ElapsedMs}ms)",
                 endpoint.ServiceName,
                 status,
@@ -336,7 +336,7 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
                         "application/json");
                 }
 
-                var response = await _httpClient.SendAsync(request, linkedCts.Token);
+                var response = await this._httpClient.SendAsync(request, linkedCts.Token);
                 stopwatch.Stop();
 
                 if ((int)response.StatusCode == endpoint.ExpectedStatusCode)
@@ -370,7 +370,7 @@ public sealed class PostDeploymentValidationService : IPostDeploymentValidationS
                 Error = error
             });
 
-            _logger.LogDebug(
+            this._logger.LogDebug(
                 "Smoke test {Test}: {Status} ({ElapsedMs}ms)",
                 endpoint.TestName,
                 status,

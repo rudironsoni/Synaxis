@@ -95,7 +95,7 @@ public abstract class EventSourcedAggregate
 
         if (isNew)
         {
-            uncommittedEvents.Add(@event);
+            this.uncommittedEvents.Add(@event);
         }
         else
         {
@@ -108,8 +108,8 @@ public abstract class EventSourcedAggregate
     /// </summary>
     public void MarkCommitted()
     {
-        this.Version += uncommittedEvents.Count;
-        uncommittedEvents.Clear();
+        this.Version += this.uncommittedEvents.Count;
+        this.uncommittedEvents.Clear();
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ public abstract class EventSourcedAggregate
     /// </summary>
     public void ClearUncommittedEvents()
     {
-        uncommittedEvents.Clear();
+        this.uncommittedEvents.Clear();
     }
 
     /// <summary>

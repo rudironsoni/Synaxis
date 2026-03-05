@@ -139,7 +139,7 @@ dotnet_diagnostic.SA1649.severity = none
 # Test Projects - suppress most StyleCop rules for test code
 # Tests don't need the same strict style enforcement as production code
 [tests/**/*.cs]
-dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1101.severity = error
 dotnet_diagnostic.SA1116.severity = none
 dotnet_diagnostic.SA1214.severity = none
 dotnet_diagnostic.SA1413.severity = none

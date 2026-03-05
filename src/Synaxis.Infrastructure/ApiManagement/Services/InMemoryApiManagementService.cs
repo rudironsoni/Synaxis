@@ -35,13 +35,13 @@ public sealed class InMemoryApiManagementService : IApiManagementService
         IOptions<ApiManagementOptions> options,
         ILogger<InMemoryApiManagementService> logger)
     {
-        _options = options?.Value?.InMemory ?? new InMemoryOptions();
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._options = options?.Value?.InMemory ?? new InMemoryOptions();
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Seed test keys if configured
-        foreach (var testKey in _options.TestKeys)
+        foreach (var testKey in this._options.TestKeys)
         {
-            _keys.TryAdd(testKey.Key, new ApiKeyEntry
+            this._keys.TryAdd(testKey.Key, new ApiKeyEntry
             {
                 Id = Guid.NewGuid().ToString("N"),
                 KeyValue = testKey.Key,
@@ -51,7 +51,7 @@ public sealed class InMemoryApiManagementService : IApiManagementService
             });
         }
 
-        _logger.LogInformation("InMemoryApiManagementService initialized with {KeyCount} test keys", _keys.Count);
+        this._logger.LogInformation("InMemoryApiManagementService initialized with {KeyCount} test keys", this._keys.Count);
     }
 
     /// <inheritdoc />
@@ -62,31 +62,31 @@ public sealed class InMemoryApiManagementService : IApiManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        SimulateLatency();
+        this.SimulateLatency();
 
-        if (!_keys.TryGetValue(apiKey, out var entry))
+        if (!this._keys.TryGetValue(apiKey, out var entry))
         {
-            _logger.LogWarning("API key not found: {KeyPrefix}...", apiKey.Substring(0, Math.Min(8, apiKey.Length)));
-            return Task.FromResult(CreateInvalidResult("Invalid API key"));
+            this._logger.LogWarning("API key not found: {KeyPrefix}...", apiKey.Substring(0, Math.Min(8, apiKey.Length)));
+            return Task.FromResult(this.CreateInvalidResult("Invalid API key"));
         }
 
         if (entry.State == ApiKeyState.Revoked)
         {
-            _logger.LogWarning("API key is revoked: {KeyId}", entry.Id);
-            return Task.FromResult(CreateInvalidResult("API key has been revoked"));
+            this._logger.LogWarning("API key is revoked: {KeyId}", entry.Id);
+            return Task.FromResult(this.CreateInvalidResult("API key has been revoked"));
         }
 
         if (entry.State == ApiKeyState.Expired ||
             (entry.ExpiresAt.HasValue && entry.ExpiresAt.Value < DateTimeOffset.UtcNow))
         {
-            _logger.LogWarning("API key has expired: {KeyId}", entry.Id);
-            return Task.FromResult(CreateInvalidResult("API key has expired"));
+            this._logger.LogWarning("API key has expired: {KeyId}", entry.Id);
+            return Task.FromResult(this.CreateInvalidResult("API key has expired"));
         }
 
         entry.LastUsedAt = DateTimeOffset.UtcNow;
         entry.UsageCount++;
 
-        _logger.LogDebug("API key validated successfully: {KeyId}", entry.Id);
+        this._logger.LogDebug("API key validated successfully: {KeyId}", entry.Id);
 
         return Task.FromResult(new ApiKeyValidationResult
         {
@@ -104,9 +104,9 @@ public sealed class InMemoryApiManagementService : IApiManagementService
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.DisplayName);
 
-        SimulateLatency();
+        this.SimulateLatency();
 
-        var keyValue = GenerateApiKey();
+        var keyValue = this.GenerateApiKey();
         var keyId = Guid.NewGuid().ToString("N");
 
         var entry = new ApiKeyEntry
@@ -123,17 +123,17 @@ public sealed class InMemoryApiManagementService : IApiManagementService
             CreatedAt = DateTimeOffset.UtcNow,
         };
 
-        _keys.TryAdd(keyValue, entry);
+        this._keys.TryAdd(keyValue, entry);
 
         // Initialize rate limit entry
-        _rateLimits.TryAdd(keyId, new RateLimitEntry
+        this._rateLimits.TryAdd(keyId, new RateLimitEntry
         {
             KeyId = keyId,
             WindowStart = DateTimeOffset.UtcNow,
             RequestCount = 0,
         });
 
-        _logger.LogInformation("Provisioned new API key: {KeyId} for {DisplayName}", keyId, request.DisplayName);
+        this._logger.LogInformation("Provisioned new API key: {KeyId} for {DisplayName}", keyId, request.DisplayName);
 
         return Task.FromResult(new ApiKey
         {
@@ -154,19 +154,19 @@ public sealed class InMemoryApiManagementService : IApiManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(keyId);
 
-        SimulateLatency();
+        this.SimulateLatency();
 
-        var entry = _keys.Values.FirstOrDefault(k => k.Id == keyId);
+        var entry = this._keys.Values.FirstOrDefault(k => k.Id == keyId);
         if (entry == null)
         {
-            _logger.LogWarning("API key not found for revocation: {KeyId}", keyId);
+            this._logger.LogWarning("API key not found for revocation: {KeyId}", keyId);
             return Task.FromResult(false);
         }
 
         entry.State = ApiKeyState.Revoked;
         entry.RevokedAt = DateTimeOffset.UtcNow;
 
-        _logger.LogInformation("Revoked API key: {KeyId}", keyId);
+        this._logger.LogInformation("Revoked API key: {KeyId}", keyId);
         return Task.FromResult(true);
     }
 
@@ -176,9 +176,9 @@ public sealed class InMemoryApiManagementService : IApiManagementService
         ArgumentException.ThrowIfNullOrWhiteSpace(keyId);
         ArgumentNullException.ThrowIfNull(config);
 
-        SimulateLatency();
+        this.SimulateLatency();
 
-        var entry = _rateLimits.AddOrUpdate(
+        var entry = this._rateLimits.AddOrUpdate(
             keyId,
             _ => new RateLimitEntry
             {
@@ -195,7 +195,7 @@ public sealed class InMemoryApiManagementService : IApiManagementService
                 RequestCount = existing.RequestCount,
             });
 
-        _logger.LogInformation("Configured rate limit for key {KeyId}: {RequestsPerWindow}/{WindowSeconds}s",
+        this._logger.LogInformation("Configured rate limit for key {KeyId}: {RequestsPerWindow}/{WindowSeconds}s",
             keyId, config.RequestsPerWindow, config.WindowSeconds);
 
         return Task.FromResult(true);
@@ -206,9 +206,9 @@ public sealed class InMemoryApiManagementService : IApiManagementService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(keyId);
 
-        SimulateLatency();
+        this.SimulateLatency();
 
-        if (!_rateLimits.TryGetValue(keyId, out var entry) || entry.Config == null)
+        if (!this._rateLimits.TryGetValue(keyId, out var entry) || entry.Config == null)
         {
             return Task.FromResult(new RateLimitStatus
             {
@@ -252,9 +252,9 @@ public sealed class InMemoryApiManagementService : IApiManagementService
         IDictionary<string, string>? filters = null,
         CancellationToken cancellationToken = default)
     {
-        SimulateLatency();
+        this.SimulateLatency();
 
-        var relevantKeys = _keys.Values.Where(k =>
+        var relevantKeys = this._keys.Values.Where(k =>
             k.CreatedAt <= endTime &&
             (k.RevokedAt == null || k.RevokedAt >= startTime));
 
@@ -285,7 +285,7 @@ public sealed class InMemoryApiManagementService : IApiManagementService
 
         var totalCalls = relevantKeys.Sum(k => k.UsageCount);
 
-        _logger.LogInformation("Generated usage report: {TotalCalls} total calls from {StartTime} to {EndTime}",
+        this._logger.LogInformation("Generated usage report: {TotalCalls} total calls from {StartTime} to {EndTime}",
             totalCalls, startTime, endTime);
 
         return Task.FromResult(new UsageReport
@@ -309,13 +309,13 @@ public sealed class InMemoryApiManagementService : IApiManagementService
 
     private void SimulateLatency()
     {
-        if (_options.SimulatedLatencyMs > 0)
+        if (this._options.SimulatedLatencyMs > 0)
         {
-            Thread.Sleep(_options.SimulatedLatencyMs);
+            Thread.Sleep(this._options.SimulatedLatencyMs);
         }
     }
 
-    private static string GenerateApiKey()
+    private string GenerateApiKey()
     {
         var bytes = new byte[32];
         using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
@@ -325,7 +325,7 @@ public sealed class InMemoryApiManagementService : IApiManagementService
         return "synaxis_test_" + Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").Replace("=", "").Substring(0, 32);
     }
 
-    private static ApiKeyValidationResult CreateInvalidResult(string errorMessage)
+    private ApiKeyValidationResult CreateInvalidResult(string errorMessage)
     {
         return new ApiKeyValidationResult
         {

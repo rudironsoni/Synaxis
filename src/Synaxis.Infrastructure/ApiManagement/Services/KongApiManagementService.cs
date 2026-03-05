@@ -42,17 +42,17 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         ILogger<KongApiManagementService> logger,
         HttpClient httpClient)
     {
-        _options = options?.Value?.Kong ?? throw new ArgumentNullException(nameof(options), "Kong options are required");
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        this._options = options?.Value?.Kong ?? throw new ArgumentNullException(nameof(options), "Kong options are required");
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
-        _jsonOptions = new JsonSerializerOptions
+        this._jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
-        ConfigureHttpClient();
+        this.ConfigureHttpClient();
     }
 
     /// <inheritdoc />
@@ -65,32 +65,32 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
 
         try
         {
-            _logger.LogDebug("Validating API key against Kong");
+            this._logger.LogDebug("Validating API key against Kong");
 
             // Query the key-auth credential by key value
             var url = $"/key-auths/{Uri.EscapeDataString(apiKey)}";
-            var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            var response = await this._httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("API key not found in Kong");
+                this._logger.LogWarning("API key not found in Kong");
                 return CreateInvalidResult("Invalid API key");
             }
 
             response.EnsureSuccessStatusCode();
 
-            var credential = await response.Content.ReadFromJsonAsync<KongKeyAuthCredential>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            var credential = await response.Content.ReadFromJsonAsync<KongKeyAuthCredential>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
 
             if (credential?.ConsumerId == null)
             {
-                _logger.LogWarning("Invalid API key response from Kong");
+                this._logger.LogWarning("Invalid API key response from Kong");
                 return CreateInvalidResult("Invalid API key");
             }
 
             // Get consumer details
-            var consumer = await GetConsumerAsync(credential.ConsumerId, cancellationToken).ConfigureAwait(false);
+            var consumer = await this.GetConsumerAsync(credential.ConsumerId, cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("API key validated successfully: Consumer={ConsumerId}", credential.ConsumerId);
+            this._logger.LogInformation("API key validated successfully: Consumer={ConsumerId}", credential.ConsumerId);
 
             return new ApiKeyValidationResult
             {
@@ -108,12 +108,12 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
-            _logger.LogWarning("API key not found in Kong");
+            this._logger.LogWarning("API key not found in Kong");
             return CreateInvalidResult("Invalid API key");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating API key against Kong");
+            this._logger.LogError(ex, "Error validating API key against Kong");
             return CreateInvalidResult("Error validating API key");
         }
     }
@@ -126,22 +126,22 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
 
         try
         {
-            _logger.LogInformation("Provisioning new API key in Kong: {DisplayName}", request.DisplayName);
+            this._logger.LogInformation("Provisioning new API key in Kong: {DisplayName}", request.DisplayName);
 
             // Create or get consumer
-            var consumer = await CreateConsumerAsync(request.DisplayName, request.Metadata, cancellationToken).ConfigureAwait(false);
+            var consumer = await this.CreateConsumerAsync(request.DisplayName, request.Metadata, cancellationToken).ConfigureAwait(false);
 
             // Create key-auth credential for the consumer
-            var keyValue = GenerateApiKey();
-            var credential = await CreateKeyAuthCredentialAsync(consumer.Id, keyValue, cancellationToken).ConfigureAwait(false);
+            var keyValue = this.GenerateApiKey();
+            var credential = await this.CreateKeyAuthCredentialAsync(consumer.Id, keyValue, cancellationToken).ConfigureAwait(false);
 
             // Apply rate limiting plugin if configured
-            if (_options.ConsumerPattern != null)
+            if (this._options.ConsumerPattern != null)
             {
                 await ConfigureRateLimitingForConsumerAsync(consumer.Id, cancellationToken).ConfigureAwait(false);
             }
 
-            _logger.LogInformation("Successfully provisioned API key: {KeyId}", credential.Id);
+            this._logger.LogInformation("Successfully provisioned API key: {KeyId}", credential.Id);
 
             return new ApiKey
             {
@@ -157,7 +157,7 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error provisioning API key in Kong");
+            this._logger.LogError(ex, "Error provisioning API key in Kong");
             throw;
         }
     }
@@ -169,25 +169,25 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
 
         try
         {
-            _logger.LogInformation("Revoking API key in Kong: {KeyId}", keyId);
+            this._logger.LogInformation("Revoking API key in Kong: {KeyId}", keyId);
 
             var url = $"/consumers/{Uri.EscapeDataString(keyId)}";
-            var response = await _httpClient.DeleteAsync(url, cancellationToken).ConfigureAwait(false);
+            var response = await this._httpClient.DeleteAsync(url, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Consumer not found for revocation: {KeyId}", keyId);
+                this._logger.LogWarning("Consumer not found for revocation: {KeyId}", keyId);
                 return false;
             }
 
             response.EnsureSuccessStatusCode();
 
-            _logger.LogInformation("Successfully revoked API key: {KeyId}", keyId);
+            this._logger.LogInformation("Successfully revoked API key: {KeyId}", keyId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error revoking API key in Kong: {KeyId}", keyId);
+            this._logger.LogError(ex, "Error revoking API key in Kong: {KeyId}", keyId);
             return false;
         }
     }
@@ -200,7 +200,7 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
 
         try
         {
-            _logger.LogInformation("Configuring rate limit for consumer {KeyId}: {RequestsPerWindow} requests per {WindowSeconds}s",
+            this._logger.LogInformation("Configuring rate limit for consumer {KeyId}: {RequestsPerWindow} requests per {WindowSeconds}s",
                 keyId, config.RequestsPerWindow, config.WindowSeconds);
 
             // Create rate limiting plugin for the consumer
@@ -219,22 +219,22 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
             };
 
             var url = "/plugins";
-            var content = JsonContent.Create(pluginConfig, options: _jsonOptions);
-            var response = await _httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+            var content = JsonContent.Create(pluginConfig, options: this._jsonOptions);
+            var response = await this._httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                _logger.LogError("Failed to configure rate limiting: {Error}", errorBody);
+                this._logger.LogError("Failed to configure rate limiting: {Error}", errorBody);
                 return false;
             }
 
-            _logger.LogInformation("Successfully configured rate limiting for consumer {KeyId}", keyId);
+            this._logger.LogInformation("Successfully configured rate limiting for consumer {KeyId}", keyId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error configuring rate limit for consumer {KeyId}", keyId);
+            this._logger.LogError(ex, "Error configuring rate limit for consumer {KeyId}", keyId);
             return false;
         }
     }
@@ -246,7 +246,7 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
 
         try
         {
-            _logger.LogDebug("Getting rate limit status for consumer: {KeyId}", keyId);
+            this._logger.LogDebug("Getting rate limit status for consumer: {KeyId}", keyId);
 
             // Kong doesn't provide a direct API for current rate limit status
             // We would need to use a custom plugin or cache layer
@@ -263,7 +263,7 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting rate limit status for consumer {KeyId}", keyId);
+            this._logger.LogError(ex, "Error getting rate limit status for consumer {KeyId}", keyId);
             throw;
         }
     }
@@ -277,13 +277,13 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
     {
         try
         {
-            _logger.LogInformation("Generating usage report from {StartTime} to {EndTime}", startTime, endTime);
+            this._logger.LogInformation("Generating usage report from {StartTime} to {EndTime}", startTime, endTime);
 
             // Kong doesn't have built-in analytics API in open source
             // Enterprise version has Vitals API
             // This is a simplified implementation
 
-            _logger.LogWarning("Usage report generation requires Kong Enterprise - returning mock data");
+            this._logger.LogWarning("Usage report generation requires Kong Enterprise - returning mock data");
 
             return new UsageReport
             {
@@ -305,7 +305,7 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating usage report");
+            this._logger.LogError(ex, "Error generating usage report");
             throw;
         }
     }
@@ -313,34 +313,34 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
     /// <inheritdoc />
     public void Dispose()
     {
-        if (!_disposed)
+        if (!this._disposed)
         {
-            _httpClient?.Dispose();
-            _disposed = true;
+            this._httpClient?.Dispose();
+            this._disposed = true;
         }
     }
 
     private void ConfigureHttpClient()
     {
-        var baseUrl = _options.AdminApiUrl;
+        var baseUrl = this._options.AdminApiUrl;
         if (!baseUrl.EndsWith('/'))
         {
             baseUrl += "/";
         }
 
-        _httpClient.BaseAddress = new Uri(baseUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        this._httpClient.BaseAddress = new Uri(baseUrl);
+        this._httpClient.Timeout = TimeSpan.FromSeconds(this._options.TimeoutSeconds);
+        this._httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
         // Add authentication
-        if (!string.IsNullOrEmpty(_options.AdminApiKey))
+        if (!string.IsNullOrEmpty(this._options.AdminApiKey))
         {
-            _httpClient.DefaultRequestHeaders.Add("apikey", _options.AdminApiKey);
+            this._httpClient.DefaultRequestHeaders.Add("apikey", this._options.AdminApiKey);
         }
-        else if (!string.IsNullOrEmpty(_options.Username) && !string.IsNullOrEmpty(_options.Password))
+        else if (!string.IsNullOrEmpty(this._options.Username) && !string.IsNullOrEmpty(this._options.Password))
         {
-            var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_options.Username}:{_options.Password}"));
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+            var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{this._options.Username}:{this._options.Password}"));
+            this._httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
         }
     }
 
@@ -356,8 +356,8 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
             custom_id = metadata.TryGetValue("customId", out var customId) ? customId : null,
         };
 
-        var content = JsonContent.Create(consumerData, options: _jsonOptions);
-        var response = await _httpClient.PostAsync("/consumers", content, cancellationToken).ConfigureAwait(false);
+        var content = JsonContent.Create(consumerData, options: this._jsonOptions);
+        var response = await this._httpClient.PostAsync("/consumers", content, cancellationToken).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.Conflict)
         {
@@ -368,13 +368,13 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
 
         response.EnsureSuccessStatusCode();
 
-        var consumer = await response.Content.ReadFromJsonAsync<KongConsumer>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var consumer = await response.Content.ReadFromJsonAsync<KongConsumer>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
         return consumer ?? throw new InvalidOperationException("Empty response when creating consumer");
     }
 
     private async Task<KongConsumer?> GetConsumerAsync(string consumerId, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync($"/consumers/{Uri.EscapeDataString(consumerId)}", cancellationToken).ConfigureAwait(false);
+        var response = await this._httpClient.GetAsync($"/consumers/{Uri.EscapeDataString(consumerId)}", cancellationToken).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -382,12 +382,12 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         }
 
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<KongConsumer>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<KongConsumer>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<KongConsumer?> GetConsumerByUsernameAsync(string username, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync($"/consumers/{Uri.EscapeDataString(username)}", cancellationToken).ConfigureAwait(false);
+        var response = await this._httpClient.GetAsync($"/consumers/{Uri.EscapeDataString(username)}", cancellationToken).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -395,7 +395,7 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
         }
 
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<KongConsumer>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<KongConsumer>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<KongKeyAuthCredential> CreateKeyAuthCredentialAsync(
@@ -408,11 +408,11 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
             key = keyValue,
         };
 
-        var content = JsonContent.Create(credentialData, options: _jsonOptions);
-        var response = await _httpClient.PostAsync($"/consumers/{Uri.EscapeDataString(consumerId)}/key-auth", content, cancellationToken).ConfigureAwait(false);
+        var content = JsonContent.Create(credentialData, options: this._jsonOptions);
+        var response = await this._httpClient.PostAsync($"/consumers/{Uri.EscapeDataString(consumerId)}/key-auth", content, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var credential = await response.Content.ReadFromJsonAsync<KongKeyAuthCredential>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var credential = await response.Content.ReadFromJsonAsync<KongKeyAuthCredential>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
         return credential ?? throw new InvalidOperationException("Empty response when creating key-auth credential");
     }
 
@@ -430,11 +430,11 @@ public sealed class KongApiManagementService : IApiManagementService, IDisposabl
             },
         };
 
-        var content = JsonContent.Create(pluginConfig, options: _jsonOptions);
+        var content = JsonContent.Create(pluginConfig, options: this._jsonOptions);
         await _httpClient.PostAsync("/plugins", content, cancellationToken).ConfigureAwait(false);
     }
 
-    private static string GenerateApiKey()
+    private string GenerateApiKey()
     {
         var bytes = new byte[32];
         using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())

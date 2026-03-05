@@ -23,7 +23,7 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
     /// <param name="publisher">The MediatR publisher.</param>
     public DomainEventPublisher(IPublisher publisher)
     {
-        _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
+        this._publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
     }
 
     /// <inheritdoc/>

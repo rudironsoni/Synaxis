@@ -88,8 +88,8 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
     /// <param name="logger">The logger.</param>
     public MigrationExecutionService(ILogger<MigrationExecutionService> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _jsonOptions = new JsonSerializerOptions
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -107,7 +107,7 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
 
         var migrationId = $"{DateTimeOffset.UtcNow:yyyyMMdd_HHmmss}_{environment}";
 
-        _logger.LogInformation(
+        this._logger.LogInformation(
             "Creating migration execution context: {MigrationId} for environment: {Environment}",
             migrationId,
             environment);
@@ -144,7 +144,7 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
             throw new ArgumentNullException(nameof(action));
         }
 
-        _logger.LogInformation("Starting migration phase: {PhaseName}", phaseName);
+        this._logger.LogInformation("Starting migration phase: {PhaseName}", phaseName);
 
         var stopwatch = Stopwatch.StartNew();
         TResult result;
@@ -156,7 +156,7 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
 
             log.AddPhase(phaseName, MigrationPhaseStatus.Completed, (int)stopwatch.Elapsed.TotalSeconds);
 
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Completed migration phase: {PhaseName} in {ElapsedMs}ms",
                 phaseName,
                 stopwatch.ElapsedMilliseconds);
@@ -167,14 +167,14 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
         {
             stopwatch.Stop();
             log.AddPhase(phaseName, MigrationPhaseStatus.Failed, (int)stopwatch.Elapsed.TotalSeconds);
-            _logger.LogWarning("Migration phase cancelled: {PhaseName}", phaseName);
+            this._logger.LogWarning("Migration phase cancelled: {PhaseName}", phaseName);
             throw;
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
             log.AddPhase(phaseName, MigrationPhaseStatus.Failed, (int)stopwatch.Elapsed.TotalSeconds);
-            _logger.LogError(
+            this._logger.LogError(
                 ex,
                 "Migration phase failed: {PhaseName} after {ElapsedMs}ms",
                 phaseName,
@@ -201,16 +201,16 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
         switch (severity)
         {
             case IssueSeverity.Critical:
-                _logger.LogCritical("[{Component}] {Message}", component, message);
+                this._logger.LogCritical("[{Component}] {Message}", component, message);
                 break;
             case IssueSeverity.Error:
-                _logger.LogError("[{Component}] {Message}", component, message);
+                this._logger.LogError("[{Component}] {Message}", component, message);
                 break;
             case IssueSeverity.Warning:
-                _logger.LogWarning("[{Component}] {Message}", component, message);
+                this._logger.LogWarning("[{Component}] {Message}", component, message);
                 break;
             default:
-                _logger.LogInformation("[{Component}] {Message}", component, message);
+                this._logger.LogInformation("[{Component}] {Message}", component, message);
                 break;
         }
     }
@@ -240,7 +240,7 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
 
         log.RecordDecision(decision, reason, approver);
 
-        _logger.LogInformation(
+        this._logger.LogInformation(
             "Migration decision recorded: {Decision} by {Approver}. Reason: {Reason}",
             decision,
             approver,
@@ -258,7 +258,7 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
         if (success)
         {
             log.MarkCompleted();
-            _logger.LogInformation(
+            this._logger.LogInformation(
                 "Migration {MigrationId} completed successfully in {Duration}s",
                 log.MigrationId,
                 log.DurationSeconds);
@@ -266,7 +266,7 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
         else
         {
             log.MarkFailed();
-            _logger.LogError(
+            this._logger.LogError(
                 "Migration {MigrationId} failed after {Duration}s",
                 log.MigrationId,
                 log.DurationSeconds);
@@ -292,9 +292,9 @@ public sealed class MigrationExecutionService : IMigrationExecutionService
             Directory.CreateDirectory(directory);
         }
 
-        var json = JsonSerializer.Serialize(log, _jsonOptions);
+        var json = JsonSerializer.Serialize(log, this._jsonOptions);
         await File.WriteAllTextAsync(outputPath, json);
 
-        _logger.LogInformation("Migration execution log saved to: {OutputPath}", outputPath);
+        this._logger.LogInformation("Migration execution log saved to: {OutputPath}", outputPath);
     }
 }

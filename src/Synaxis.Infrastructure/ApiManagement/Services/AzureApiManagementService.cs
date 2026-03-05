@@ -43,17 +43,17 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         ILogger<AzureApiManagementService> logger,
         HttpClient httpClient)
     {
-        _options = options?.Value?.Azure ?? throw new ArgumentNullException(nameof(options), "Azure APIM options are required");
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        this._options = options?.Value?.Azure ?? throw new ArgumentNullException(nameof(options), "Azure APIM options are required");
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
-        _jsonOptions = new JsonSerializerOptions
+        this._jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
-        ConfigureHttpClient();
+        this.ConfigureHttpClient();
     }
 
     /// <inheritdoc />
@@ -66,43 +66,43 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
         try
         {
-            _logger.LogDebug("Validating API key against Azure APIM");
+            this._logger.LogDebug("Validating API key against Azure APIM");
 
             // Query subscription by key
-            var response = await GetSubscriptionByKeyAsync(apiKey, cancellationToken).ConfigureAwait(false);
+            var response = await this.GetSubscriptionByKeyAsync(apiKey, cancellationToken).ConfigureAwait(false);
 
             if (response == null)
             {
-                _logger.LogWarning("API key not found in Azure APIM");
+                this._logger.LogWarning("API key not found in Azure APIM");
                 return CreateInvalidResult("Invalid API key");
             }
 
             if (response.State == "suspended")
             {
-                _logger.LogWarning("API key is suspended in Azure APIM: {KeyId}", response.Id);
+                this._logger.LogWarning("API key is suspended in Azure APIM: {KeyId}", response.Id);
                 return CreateInvalidResult("API key is suspended");
             }
 
             if (response.State == "cancelled")
             {
-                _logger.LogWarning("API key is cancelled in Azure APIM: {KeyId}", response.Id);
+                this._logger.LogWarning("API key is cancelled in Azure APIM: {KeyId}", response.Id);
                 return CreateInvalidResult("API key has been revoked");
             }
 
             if (response.State == "expired" ||
                 (response.ExpiresAt.HasValue && response.ExpiresAt.Value < DateTimeOffset.UtcNow))
             {
-                _logger.LogWarning("API key has expired in Azure APIM: {KeyId}", response.Id);
+                this._logger.LogWarning("API key has expired in Azure APIM: {KeyId}", response.Id);
                 return CreateInvalidResult("API key has expired");
             }
 
-            _logger.LogInformation("API key validated successfully: {KeyId}", response.Id);
+            this._logger.LogInformation("API key validated successfully: {KeyId}", response.Id);
 
             return new ApiKeyValidationResult
             {
                 IsValid = true,
-                KeyId = ExtractIdFromResourceId(response.Id),
-                SubscriptionId = ExtractIdFromResourceId(response.Id),
+                KeyId = this.ExtractIdFromResourceId(response.Id),
+                SubscriptionId = this.ExtractIdFromResourceId(response.Id),
                 Scopes = response.Scope != null ? new List<string> { response.Scope } : new List<string>(),
                 Metadata = new Dictionary<string, string>
                 {
@@ -115,12 +115,12 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
-            _logger.LogWarning("API key not found in Azure APIM");
+            this._logger.LogWarning("API key not found in Azure APIM");
             return CreateInvalidResult("Invalid API key");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating API key against Azure APIM");
+            this._logger.LogError(ex, "Error validating API key against Azure APIM");
             return CreateInvalidResult("Error validating API key");
         }
     }
@@ -133,11 +133,11 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
         try
         {
-            _logger.LogInformation("Provisioning new API key in Azure APIM: {DisplayName}", request.DisplayName);
+            this._logger.LogInformation("Provisioning new API key in Azure APIM: {DisplayName}", request.DisplayName);
 
             var subscriptionName = request.DisplayName;
             var subscriptionId = Guid.NewGuid().ToString("N");
-            var scope = request.Scope ?? $"/apis/{_options.ApiId}";
+            var scope = request.Scope ?? $"/apis/{this._options.ApiId}";
 
             var createRequest = new
             {
@@ -150,13 +150,13 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
                 },
             };
 
-            var url = BuildManagementUrl($"subscriptions/{subscriptionId}");
-            var content = JsonContent.Create(createRequest, options: _jsonOptions);
+            var url = this.BuildManagementUrl($"subscriptions/{subscriptionId}");
+            var content = JsonContent.Create(createRequest, options: this._jsonOptions);
 
-            var response = await _httpClient.PutAsync(url, content, cancellationToken).ConfigureAwait(false);
+            var response = await this._httpClient.PutAsync(url, content, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<AzureSubscriptionResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            var result = await response.Content.ReadFromJsonAsync<AzureSubscriptionResponse>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
 
             if (result?.Properties == null)
             {
@@ -164,9 +164,9 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
             }
 
             // List keys for the subscription
-            var keys = await ListSubscriptionKeysAsync(subscriptionId, cancellationToken).ConfigureAwait(false);
+            var keys = await this.ListSubscriptionKeysAsync(subscriptionId, cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Successfully provisioned API key: {KeyId}", subscriptionId);
+            this._logger.LogInformation("Successfully provisioned API key: {KeyId}", subscriptionId);
 
             return new ApiKey
             {
@@ -184,7 +184,7 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error provisioning API key in Azure APIM");
+            this._logger.LogError(ex, "Error provisioning API key in Azure APIM");
             throw;
         }
     }
@@ -196,16 +196,16 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
         try
         {
-            _logger.LogInformation("Revoking API key in Azure APIM: {KeyId}", keyId);
+            this._logger.LogInformation("Revoking API key in Azure APIM: {KeyId}", keyId);
 
-            var url = BuildManagementUrl($"subscriptions/{keyId}");
+            var url = this.BuildManagementUrl($"subscriptions/{keyId}");
 
             // First, get current subscription to preserve other properties
-            var getResponse = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            var getResponse = await this._httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
             if (getResponse.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("API key not found for revocation: {KeyId}", keyId);
+                this._logger.LogWarning("API key not found for revocation: {KeyId}", keyId);
                 return false;
             }
 
@@ -220,16 +220,16 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
                 },
             };
 
-            var content = JsonContent.Create(updateRequest, options: _jsonOptions);
-            var patchResponse = await _httpClient.PatchAsync(url, content, cancellationToken).ConfigureAwait(false);
+            var content = JsonContent.Create(updateRequest, options: this._jsonOptions);
+            var patchResponse = await this._httpClient.PatchAsync(url, content, cancellationToken).ConfigureAwait(false);
             patchResponse.EnsureSuccessStatusCode();
 
-            _logger.LogInformation("Successfully revoked API key: {KeyId}", keyId);
+            this._logger.LogInformation("Successfully revoked API key: {KeyId}", keyId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error revoking API key in Azure APIM: {KeyId}", keyId);
+            this._logger.LogError(ex, "Error revoking API key in Azure APIM: {KeyId}", keyId);
             return false;
         }
     }
@@ -242,32 +242,32 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
         try
         {
-            _logger.LogInformation("Configuring rate limit for key {KeyId}: {RequestsPerWindow} requests per {WindowSeconds}s",
+            this._logger.LogInformation("Configuring rate limit for key {KeyId}: {RequestsPerWindow} requests per {WindowSeconds}s",
                 keyId, config.RequestsPerWindow, config.WindowSeconds);
 
             // In Azure APIM, rate limits are typically configured via policies at the API or product level
             // For subscription-specific limits, we need to configure a policy at the product level
             // or use the quota-by-key policy
 
-            var policyContent = BuildRateLimitPolicy(config);
+            var policyContent = this.BuildRateLimitPolicy(config);
 
             // This is a simplified implementation - in practice, you'd need to:
             // 1. Get or create a product for this subscription
             // 2. Configure the policy at the product level
             // 3. Or use named values and policy expressions
 
-            _logger.LogDebug("Rate limit policy: {Policy}", policyContent);
+            this._logger.LogDebug("Rate limit policy: {Policy}", policyContent);
 
             // For now, we log the configuration request
             // Full implementation would require product management
-            _logger.LogInformation("Rate limit configuration for {KeyId} would apply: {RequestsPerWindow}/{WindowSeconds}s",
+            this._logger.LogInformation("Rate limit configuration for {KeyId} would apply: {RequestsPerWindow}/{WindowSeconds}s",
                 keyId, config.RequestsPerWindow, config.WindowSeconds);
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error configuring rate limit for key {KeyId}", keyId);
+            this._logger.LogError(ex, "Error configuring rate limit for key {KeyId}", keyId);
             return false;
         }
     }
@@ -279,7 +279,7 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
         try
         {
-            _logger.LogDebug("Getting rate limit status for key: {KeyId}", keyId);
+            this._logger.LogDebug("Getting rate limit status for key: {KeyId}", keyId);
 
             // Azure APIM doesn't provide a direct API for current rate limit status
             // We would need to query metrics or use a custom caching layer
@@ -296,7 +296,7 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting rate limit status for key {KeyId}", keyId);
+            this._logger.LogError(ex, "Error getting rate limit status for key {KeyId}", keyId);
             throw;
         }
     }
@@ -310,13 +310,13 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
     {
         try
         {
-            _logger.LogInformation("Generating usage report from {StartTime} to {EndTime}", startTime, endTime);
+            this._logger.LogInformation("Generating usage report from {StartTime} to {EndTime}", startTime, endTime);
 
             // Azure APIM usage reports require Azure Monitor metrics
             // This is a simplified implementation that returns mock data
             // In production, you'd query Azure Monitor metrics API
 
-            _logger.LogWarning("Usage report generation is not fully implemented - returning mock data");
+            this._logger.LogWarning("Usage report generation is not fully implemented - returning mock data");
 
             return new UsageReport
             {
@@ -338,7 +338,7 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating usage report");
+            this._logger.LogError(ex, "Error generating usage report");
             throw;
         }
     }
@@ -346,33 +346,33 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
     /// <inheritdoc />
     public void Dispose()
     {
-        if (!_disposed)
+        if (!this._disposed)
         {
-            _httpClient?.Dispose();
-            _disposed = true;
+            this._httpClient?.Dispose();
+            this._disposed = true;
         }
     }
 
     private void ConfigureHttpClient()
     {
-        _httpClient.BaseAddress = new Uri(_options.ManagementApiUrl ?? "https://management.azure.com");
-        _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        this._httpClient.BaseAddress = new Uri(this._options.ManagementApiUrl ?? "https://management.azure.com");
+        this._httpClient.Timeout = TimeSpan.FromSeconds(this._options.TimeoutSeconds);
+        this._httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
         // Add authorization header (would be set up via token acquisition)
         // In production, use Azure.Identity for token acquisition
-        if (!string.IsNullOrEmpty(_options.ClientSecret))
+        if (!string.IsNullOrEmpty(this._options.ClientSecret))
         {
-            var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_options.ClientId}:{_options.ClientSecret}"));
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+            var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{this._options.ClientId}:{this._options.ClientSecret}"));
+            this._httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
         }
     }
 
     private string BuildManagementUrl(string path)
     {
-        var basePath = $"/subscriptions/{_options.SubscriptionId}/resourceGroups/{_options.ResourceGroupName}/providers/Microsoft.ApiManagement/service/{_options.ServiceName}";
+        var basePath = $"/subscriptions/{this._options.SubscriptionId}/resourceGroups/{this._options.ResourceGroupName}/providers/Microsoft.ApiManagement/service/{this._options.ServiceName}";
         var fullPath = $"{basePath}/{path}";
-        var apiVersion = _options.ApiVersion ?? "2022-08-01";
+        var apiVersion = this._options.ApiVersion ?? "2022-08-01";
         return $"{fullPath}?api-version={apiVersion}";
     }
 
@@ -384,11 +384,11 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         // 2. Or use the list subscriptions API and check each key
 
         // For this implementation, we'll list all subscriptions and check keys
-        var url = BuildManagementUrl("subscriptions");
-        var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        var url = this.BuildManagementUrl("subscriptions");
+        var response = await this._httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<AzureSubscriptionListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<AzureSubscriptionListResponse>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
 
         if (result?.Value == null)
         {
@@ -397,7 +397,7 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
         foreach (var subscription in result.Value)
         {
-            var keys = await ListSubscriptionKeysAsync(ExtractIdFromResourceId(subscription.Id), cancellationToken).ConfigureAwait(false);
+            var keys = await this.ListSubscriptionKeysAsync(this.ExtractIdFromResourceId(subscription.Id) ?? string.Empty, cancellationToken).ConfigureAwait(false);
 
             if (keys.PrimaryKey == apiKey || keys.SecondaryKey == apiKey)
             {
@@ -412,16 +412,16 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
 
     private async Task<SubscriptionKeys> ListSubscriptionKeysAsync(string subscriptionId, CancellationToken cancellationToken)
     {
-        var url = BuildManagementUrl($"subscriptions/{subscriptionId}/listSecrets");
-        var response = await _httpClient.PostAsync(url, new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
+        var url = this.BuildManagementUrl($"subscriptions/{subscriptionId}/listSecrets");
+        var response = await this._httpClient.PostAsync(url, new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<SubscriptionKeys>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<SubscriptionKeys>(this._jsonOptions, cancellationToken).ConfigureAwait(false);
 
         return result ?? new SubscriptionKeys();
     }
 
-    private static string ExtractIdFromResourceId(string? resourceId)
+    private string? ExtractIdFromResourceId(string? resourceId)
     {
         if (string.IsNullOrEmpty(resourceId))
         {
@@ -443,7 +443,7 @@ public sealed class AzureApiManagementService : IApiManagementService, IDisposab
         };
     }
 
-    private static string BuildRateLimitPolicy(RateLimitConfig config)
+    private string BuildRateLimitPolicy(RateLimitConfig config)
     {
         return $@"
 <rate-limit-by-key calls=""{config.RequestsPerWindow}""

@@ -105,9 +105,9 @@ public sealed class MigrationExecutionLog
     /// <param name="duration">The phase duration in seconds.</param>
     public void AddPhase(string name, MigrationPhaseStatus status, int duration)
     {
-        Phases.Add(new MigrationPhase
+        this.Phases.Add(new MigrationPhase
         {
-            Name = name,
+                   Name = name,
             Status = status,
             DurationSeconds = duration,
             Timestamp = DateTimeOffset.UtcNow
@@ -122,7 +122,7 @@ public sealed class MigrationExecutionLog
     /// <param name="component">The affected component.</param>
     public void RecordIssue(IssueSeverity severity, string message, string component = "unknown")
     {
-        Issues.Add(new MigrationIssue
+        this.Issues.Add(new MigrationIssue
         {
             Severity = severity,
             Message = message,
@@ -139,7 +139,7 @@ public sealed class MigrationExecutionLog
     /// <param name="approver">The decision approver.</param>
     public void RecordDecision(string decision, string reason, string approver)
     {
-        Decisions.Add(new MigrationDecision
+        this.Decisions.Add(new MigrationDecision
         {
             Decision = decision,
             Reason = reason,
@@ -153,9 +153,9 @@ public sealed class MigrationExecutionLog
     /// </summary>
     public void MarkCompleted()
     {
-        Status = MigrationStatus.Completed;
-        EndedAt = DateTimeOffset.UtcNow;
-        DurationSeconds = (int)(EndedAt.Value - StartedAt).TotalSeconds;
+        this.Status = MigrationStatus.Completed;
+        this.EndedAt = DateTimeOffset.UtcNow;
+        this.DurationSeconds = (int)(this.EndedAt.Value - this.StartedAt).TotalSeconds;
     }
 
     /// <summary>
@@ -163,9 +163,9 @@ public sealed class MigrationExecutionLog
     /// </summary>
     public void MarkFailed()
     {
-        Status = MigrationStatus.Failed;
-        EndedAt = DateTimeOffset.UtcNow;
-        DurationSeconds = (int)(EndedAt.Value - StartedAt).TotalSeconds;
+        this.Status = MigrationStatus.Failed;
+        this.EndedAt = DateTimeOffset.UtcNow;
+        this.DurationSeconds = (int)(this.EndedAt.Value - this.StartedAt).TotalSeconds;
     }
 
     /// <summary>
@@ -173,9 +173,9 @@ public sealed class MigrationExecutionLog
     /// </summary>
     public void MarkRolledBack()
     {
-        Status = MigrationStatus.RolledBack;
-        EndedAt = DateTimeOffset.UtcNow;
-        DurationSeconds = (int)(EndedAt.Value - StartedAt).TotalSeconds;
+        this.Status = MigrationStatus.RolledBack;
+        this.EndedAt = DateTimeOffset.UtcNow;
+        this.DurationSeconds = (int)(this.EndedAt.Value - this.StartedAt).TotalSeconds;
     }
 }
 
