@@ -171,11 +171,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "For detailed flaky test detection, run tests multiple times and compare results." >> $GITHUB_STEP_SUMMARY
 
-  # Coverage report job
+  # Coverage report job (disabled - no coverage being generated)
   coverage-report:
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: always()
+    if: false
     timeout-minutes: 10
 
     steps:
