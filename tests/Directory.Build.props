@@ -2,6 +2,8 @@
   <PropertyGroup>
     <!-- Test projects don't need XML documentation -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Disable nullable to fix CS8632 errors -->
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
