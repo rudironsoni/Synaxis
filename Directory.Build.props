@@ -4,6 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>CS8632;CS8625;CS8618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" PrivateAssets="all">
