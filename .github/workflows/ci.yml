@@ -58,8 +58,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
-          cache-dependency-path: '**/packages.lock.json'
+          cache: false
 
       - name: Restore dependencies
         run: dotnet restore
@@ -109,6 +108,7 @@ jobs:
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         if: matrix.test-category == 'Unit'
+        continue-on-error: true
         with:
           name: code-coverage
           path: ./TestResults/**/coverage.*
