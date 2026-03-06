@@ -34,4 +34,9 @@
     <ProjectReference Include="../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
   </ItemGroup>
 
+  <!-- Remove problematic default resource glob that causes MSB3552 -->
+  <ItemGroup>
+    <EmbeddedResource Remove="**/*.resx" />
+  </ItemGroup>
+
 </Project>
