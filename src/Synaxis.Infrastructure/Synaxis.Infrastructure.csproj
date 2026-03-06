@@ -3,9 +3,19 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <!-- Disable default resource globbing to prevent MSB3552 error -->
-    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <!-- Disable all default globbing to prevent CS2001/MSB3552 errors -->
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
+
+  <!-- Explicitly include source files -->
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <Compile Include="ApiManagement/**/*.cs" />
+    <Compile Include="Configuration/**/*.cs" />
+    <Compile Include="Data/**/*.cs" />
+    <Compile Include="EventSourcing/**/*.cs" />
+    <Compile Include="Services/**/*.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" />
