@@ -67,11 +67,10 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        _container = new PostgreSqlBuilder()
+        _container = new PostgreSqlBuilder("postgres:16-alpine")
             .WithDatabase("synaxis_test")
             .WithUsername("postgres")
             .WithPassword("testpassword")
-            .WithImage("postgres:16-alpine")
             .Build();
 
         await _container.StartAsync();

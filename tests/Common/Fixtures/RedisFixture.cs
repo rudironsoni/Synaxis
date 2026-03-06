@@ -60,9 +60,7 @@ public sealed class RedisFixture : IAsyncLifetime
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        _container = new RedisBuilder()
-            .WithImage("redis:7-alpine")
-            .Build();
+        _container = new RedisBuilder("redis:7-alpine").Build();
 
         await _container.StartAsync();
 
