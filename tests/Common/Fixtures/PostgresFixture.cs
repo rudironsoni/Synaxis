@@ -72,7 +72,6 @@ public sealed class PostgresFixture : IAsyncLifetime
             .WithUsername("postgres")
             .WithPassword("testpassword")
             .WithImage("postgres:16-alpine")
-            .WithCommand("-c", "max_connections=200")
             .Build();
 
         await _container.StartAsync();

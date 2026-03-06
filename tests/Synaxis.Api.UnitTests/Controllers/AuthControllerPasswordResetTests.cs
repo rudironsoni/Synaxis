@@ -69,7 +69,7 @@ public sealed class AuthControllerPasswordResetTests : IDisposable
         _controller = new AuthController(
             _authenticationService,
             _mockUserService.Object,
-            _mockEmailService.Object,
+            
             _mockLogger.Object,
             _context);
 

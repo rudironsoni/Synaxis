@@ -62,7 +62,6 @@ public sealed class RedisFixture : IAsyncLifetime
     {
         _container = new RedisBuilder()
             .WithImage("redis:7-alpine")
-            .WithCommand("--protected-mode", "no")
             .Build();
 
         await _container.StartAsync();
