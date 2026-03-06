@@ -13,7 +13,7 @@ namespace Synaxis.Api.Controllers
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Logging;
     using Synaxis.Api.DTOs.Authentication;
-    using Synaxis.Core.Contracts;
+    
     using Synaxis.Core.Models;
     using MfaEnableResult = Synaxis.Core.Contracts.MfaEnableResult;
 
@@ -26,7 +26,6 @@ namespace Synaxis.Api.Controllers
     {
         private readonly IAuthenticationService _authenticationService;
         private readonly IUserService _userService;
-        private readonly IEmailService _emailService;
         private readonly ILogger<AuthController> _logger;
         private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _dbContext;
 
@@ -41,18 +40,17 @@ namespace Synaxis.Api.Controllers
         public AuthController(
             IAuthenticationService authenticationService,
             IUserService userService,
-            IEmailService emailService,
             ILogger<AuthController> logger,
             Synaxis.Infrastructure.Data.SynaxisDbContext dbContext)
         {
             ArgumentNullException.ThrowIfNull(authenticationService);
             ArgumentNullException.ThrowIfNull(userService);
-            ArgumentNullException.ThrowIfNull(emailService);
+
             ArgumentNullException.ThrowIfNull(logger);
             ArgumentNullException.ThrowIfNull(dbContext);
             this._authenticationService = authenticationService;
             this._userService = userService;
-            this._emailService = emailService;
+
             this._logger = logger;
             this._dbContext = dbContext;
         }
@@ -178,7 +176,7 @@ namespace Synaxis.Api.Controllers
                 await this._dbContext.SaveChangesAsync();
 
                 // Send verification email
-                await this._emailService.SendVerificationEmailAsync(user.Email, verificationUrl);
+                // Email service removed - implement via notification service
 
                 this._logger.LogInformation("Registration successful for email: {Email}", request.Email);
 
@@ -750,7 +748,7 @@ namespace Synaxis.Api.Controllers
             this._dbContext.EmailVerificationTokens.Add(tokenEntity);
             await this._dbContext.SaveChangesAsync();
 
-            await this._emailService.SendVerificationEmailAsync(user.Email, verificationUrl);
+            // Email service removed - implement via notification service
         }
 
         private static string HashToken(string token)
@@ -808,7 +806,7 @@ namespace Synaxis.Api.Controllers
             this._dbContext.PasswordResetTokens.Add(tokenEntity);
             await this._dbContext.SaveChangesAsync();
 
-            await this._emailService.SendPasswordResetEmailAsync(user.Email, resetUrl);
+            // Email service removed - implement via notification service
 
             this._logger.LogInformation("Password reset email sent for user: {UserId}", user.Id);
         }

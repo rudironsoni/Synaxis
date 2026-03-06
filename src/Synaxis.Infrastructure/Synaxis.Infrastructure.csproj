@@ -22,7 +22,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="MailKit" />
-    <PackageReference Include="MimeKit" />
     <PackageReference Include="Otp.NET" />
     <PackageReference Include="QRCoder" />
     <PackageReference Include="MediatR" />

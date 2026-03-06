@@ -78,7 +78,6 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
-        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IApiKeyService, ApiKeyService>();
 
         return services;
