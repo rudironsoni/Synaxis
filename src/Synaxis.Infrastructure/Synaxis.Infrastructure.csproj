@@ -32,9 +32,4 @@
     <ProjectReference Include="../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
   </ItemGroup>
 
-  <!-- Prevent default resource file globbing that fails on .NET 10 SDK -->
-  <ItemGroup>
-    <EmbeddedResource Remove="**/*.resx" />
-  </ItemGroup>
-
 </Project>

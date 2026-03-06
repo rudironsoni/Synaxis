@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles PasswordResetRequested domain events.
 /// </summary>
 public sealed class PasswordResetRequestedHandler : INotificationHandler<PasswordResetRequested>
@@ -18,6 +21,9 @@ public sealed class PasswordResetRequestedHandler : INotificationHandler<Passwor
     private readonly ILogger<PasswordResetRequestedHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="PasswordResetRequestedHandler"/> class.
     /// </summary>
     public PasswordResetRequestedHandler(ILogger<PasswordResetRequestedHandler> logger)

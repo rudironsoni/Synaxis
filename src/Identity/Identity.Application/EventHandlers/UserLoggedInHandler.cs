@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles UserLoggedIn domain events.
 /// </summary>
 public sealed class UserLoggedInHandler : INotificationHandler<UserLoggedIn>
@@ -18,6 +21,9 @@ public sealed class UserLoggedInHandler : INotificationHandler<UserLoggedIn>
     private readonly ILogger<UserLoggedInHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="UserLoggedInHandler"/> class.
     /// </summary>
     public UserLoggedInHandler(ILogger<UserLoggedInHandler> logger)

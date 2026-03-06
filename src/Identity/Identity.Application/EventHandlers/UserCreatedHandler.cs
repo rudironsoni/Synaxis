@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles UserCreated domain events.
 /// </summary>
 public sealed class UserCreatedHandler : INotificationHandler<UserCreated>
@@ -18,6 +21,9 @@ public sealed class UserCreatedHandler : INotificationHandler<UserCreated>
     private readonly ILogger<UserCreatedHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="UserCreatedHandler"/> class.
     /// </summary>
     public UserCreatedHandler(ILogger<UserCreatedHandler> logger)

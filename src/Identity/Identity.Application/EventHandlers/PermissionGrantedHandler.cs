@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles PermissionGranted domain events.
 /// </summary>
 public sealed class PermissionGrantedHandler : INotificationHandler<PermissionGranted>
@@ -18,6 +21,9 @@ public sealed class PermissionGrantedHandler : INotificationHandler<PermissionGr
     private readonly ILogger<PermissionGrantedHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="PermissionGrantedHandler"/> class.
     /// </summary>
     public PermissionGrantedHandler(ILogger<PermissionGrantedHandler> logger)

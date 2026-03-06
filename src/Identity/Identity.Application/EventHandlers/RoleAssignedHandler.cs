@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles RoleAssigned domain events.
 /// </summary>
 public sealed class RoleAssignedHandler : INotificationHandler<RoleAssigned>
@@ -18,6 +21,9 @@ public sealed class RoleAssignedHandler : INotificationHandler<RoleAssigned>
     private readonly ILogger<RoleAssignedHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="RoleAssignedHandler"/> class.
     /// </summary>
     public RoleAssignedHandler(ILogger<RoleAssignedHandler> logger)

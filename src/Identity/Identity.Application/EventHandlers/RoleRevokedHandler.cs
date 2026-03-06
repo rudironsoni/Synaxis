@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles RoleRevoked domain events.
 /// </summary>
 public sealed class RoleRevokedHandler : INotificationHandler<RoleRevoked>
@@ -18,6 +21,9 @@ public sealed class RoleRevokedHandler : INotificationHandler<RoleRevoked>
     private readonly ILogger<RoleRevokedHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="RoleRevokedHandler"/> class.
     /// </summary>
     public RoleRevokedHandler(ILogger<RoleRevokedHandler> logger)

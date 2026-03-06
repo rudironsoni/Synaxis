@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
 /// Handles PermissionRevoked domain events.
 /// </summary>
 public sealed class PermissionRevokedHandler : INotificationHandler<PermissionRevoked>
@@ -18,6 +21,9 @@ public sealed class PermissionRevokedHandler : INotificationHandler<PermissionRe
     private readonly ILogger<PermissionRevokedHandler> logger;
 
     /// <summary>
+    </summary>
+    <param name="logger">The logger instance.</param>
+    <summary>
     /// Initializes a new instance of the <see cref="PermissionRevokedHandler"/> class.
     /// </summary>
     public PermissionRevokedHandler(ILogger<PermissionRevokedHandler> logger)
