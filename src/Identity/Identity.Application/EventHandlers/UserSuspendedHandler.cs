@@ -11,30 +11,25 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
 /// Handles UserSuspended domain events.
 /// </summary>
 public sealed class UserSuspendedHandler : INotificationHandler<UserSuspended>
 {
-    private readonly ILogger<UserSuspendedHandler> logger;
+    private readonly ILogger<UserSuspendedHandler> _logger;
 
     /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
     /// Initializes a new instance of the <see cref="UserSuspendedHandler"/> class.
     /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public UserSuspendedHandler(ILogger<UserSuspendedHandler> logger)
     {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
     public ValueTask Handle(UserSuspended notification, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("UserSuspended handled for user {UserId}", notification.UserId);
+        this._logger.LogInformation("UserSuspended handled for user {UserId}", notification.UserId);
         return ValueTask.CompletedTask;
     }
 }

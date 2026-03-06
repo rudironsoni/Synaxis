@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Disable default resource globbing to prevent MSB3552 error -->
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
   <ItemGroup>

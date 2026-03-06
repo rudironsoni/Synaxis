@@ -11,30 +11,25 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
 /// Handles UserActivated domain events.
 /// </summary>
 public sealed class UserActivatedHandler : INotificationHandler<UserActivated>
 {
-    private readonly ILogger<UserActivatedHandler> logger;
+    private readonly ILogger<UserActivatedHandler> _logger;
 
     /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
     /// Initializes a new instance of the <see cref="UserActivatedHandler"/> class.
     /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public UserActivatedHandler(ILogger<UserActivatedHandler> logger)
     {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
     public ValueTask Handle(UserActivated notification, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("UserActivated handled for user {UserId}", notification.UserId);
+        this._logger.LogInformation("UserActivated handled for user {UserId}", notification.UserId);
         return ValueTask.CompletedTask;
     }
 }

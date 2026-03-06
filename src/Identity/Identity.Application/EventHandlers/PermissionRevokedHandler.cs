@@ -11,36 +11,25 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
 /// Handles PermissionRevoked domain events.
 /// </summary>
 public sealed class PermissionRevokedHandler : INotificationHandler<PermissionRevoked>
 {
-    private readonly ILogger<PermissionRevokedHandler> logger;
+    private readonly ILogger<PermissionRevokedHandler> _logger;
 
     /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
     /// Initializes a new instance of the <see cref="PermissionRevokedHandler"/> class.
     /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public PermissionRevokedHandler(ILogger<PermissionRevokedHandler> logger)
     {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
     public ValueTask Handle(PermissionRevoked notification, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation(
-            "Permission {Permission} revoked from user {UserId} on resource {ResourceType}/{ResourceId}",
-            notification.Permission,
-            notification.UserId,
-            notification.ResourceType,
-            notification.ResourceId);
-
+        this._logger.LogInformation("PermissionRevoked handled for user {UserId}", notification.UserId);
         return ValueTask.CompletedTask;
     }
 }

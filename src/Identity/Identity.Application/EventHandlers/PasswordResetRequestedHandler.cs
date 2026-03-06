@@ -11,30 +11,25 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
 /// Handles PasswordResetRequested domain events.
 /// </summary>
 public sealed class PasswordResetRequestedHandler : INotificationHandler<PasswordResetRequested>
 {
-    private readonly ILogger<PasswordResetRequestedHandler> logger;
+    private readonly ILogger<PasswordResetRequestedHandler> _logger;
 
     /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
     /// Initializes a new instance of the <see cref="PasswordResetRequestedHandler"/> class.
     /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public PasswordResetRequestedHandler(ILogger<PasswordResetRequestedHandler> logger)
     {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
     public ValueTask Handle(PasswordResetRequested notification, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("PasswordResetRequested handled for user {UserId}", notification.UserId);
+        this._logger.LogInformation("PasswordResetRequested handled for user {UserId}", notification.UserId);
         return ValueTask.CompletedTask;
     }
 }

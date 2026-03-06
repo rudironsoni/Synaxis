@@ -11,30 +11,25 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
 /// Handles RoleAssigned domain events.
 /// </summary>
 public sealed class RoleAssignedHandler : INotificationHandler<RoleAssigned>
 {
-    private readonly ILogger<RoleAssignedHandler> logger;
+    private readonly ILogger<RoleAssignedHandler> _logger;
 
     /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
     /// Initializes a new instance of the <see cref="RoleAssignedHandler"/> class.
     /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public RoleAssignedHandler(ILogger<RoleAssignedHandler> logger)
     {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
     public ValueTask Handle(RoleAssigned notification, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("RoleAssigned handled for user {UserId}", notification.UserId);
+        this._logger.LogInformation("RoleAssigned handled for user {UserId}", notification.UserId);
         return ValueTask.CompletedTask;
     }
 }

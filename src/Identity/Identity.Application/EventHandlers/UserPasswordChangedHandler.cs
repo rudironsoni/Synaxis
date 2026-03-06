@@ -11,30 +11,25 @@ using Microsoft.Extensions.Logging;
 using Synaxis.Identity.Domain.Events;
 
 /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
 /// Handles UserPasswordChanged domain events.
 /// </summary>
 public sealed class UserPasswordChangedHandler : INotificationHandler<UserPasswordChanged>
 {
-    private readonly ILogger<UserPasswordChangedHandler> logger;
+    private readonly ILogger<UserPasswordChangedHandler> _logger;
 
     /// <summary>
-    </summary>
-    <param name="logger">The logger instance.</param>
-    <summary>
     /// Initializes a new instance of the <see cref="UserPasswordChangedHandler"/> class.
     /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public UserPasswordChangedHandler(ILogger<UserPasswordChangedHandler> logger)
     {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     /// <inheritdoc/>
     public ValueTask Handle(UserPasswordChanged notification, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("UserPasswordChanged handled for user {UserId}", notification.UserId);
+        this._logger.LogInformation("UserPasswordChanged handled for user {UserId}", notification.UserId);
         return ValueTask.CompletedTask;
     }
 }
