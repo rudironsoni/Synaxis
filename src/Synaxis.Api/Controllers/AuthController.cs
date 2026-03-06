@@ -15,6 +15,7 @@ namespace Synaxis.Api.Controllers
     using Synaxis.Api.DTOs.Authentication;
     
     using Synaxis.Core.Models;
+    using Synaxis.Core.Contracts;
     using MfaEnableResult = Synaxis.Core.Contracts.MfaEnableResult;
 
     /// <summary>
@@ -452,7 +453,7 @@ namespace Synaxis.Api.Controllers
         /// <returns>The MFA setup result.</returns>
         [HttpPost("mfa/setup")]
         [Authorize]
-        public async Task<ActionResult<MfaSetupResult>> SetupMfa()
+        public async Task<ActionResult<MfaEnableResult>> SetupMfa()
         {
             try
             {

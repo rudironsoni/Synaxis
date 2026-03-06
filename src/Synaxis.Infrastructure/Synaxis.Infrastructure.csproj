@@ -13,7 +13,11 @@
     <Compile Include="ApiManagement/**/*.cs" />
     <Compile Include="Configuration/**/*.cs" />
     <Compile Include="Data/**/*.cs" />
+    <Compile Include="EventHandlers/**/*.cs" />
     <Compile Include="EventSourcing/**/*.cs" />
+    <Compile Include="Jobs/**/*.cs" />
+    <Compile Include="MultiRegion/**/*.cs" />
+    <Compile Include="Repositories/**/*.cs" />
     <Compile Include="Services/**/*.cs" />
   </ItemGroup>
 
