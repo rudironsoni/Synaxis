@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'testcontainers, mongodb, redis, nosql, integration-testing, bson'
   related_skills: 'advanced-testcontainers-database, advanced-aspire-testing, advanced-webapi-integration-testing'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-testcontainers-nosql'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

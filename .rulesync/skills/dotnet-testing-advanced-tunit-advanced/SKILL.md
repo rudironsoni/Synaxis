@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'tunit, advanced-testing, data-driven, dependency-injection, integration-testing, testcontainers'
   related_skills: 'advanced-tunit-fundamentals, advanced-webapi-integration-testing'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-tunit-advanced'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

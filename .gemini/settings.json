@@ -66,18 +66,6 @@
           }
         ]
       }
-    ],
-    "AfterTool": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "# Inline post-edit-dotnet.sh: Handle file edits with dotnet-specific actions. set -uo pipefail; [ -t 0 ] && INPUT=\"\" || INPUT=\"$(cat)\"; if ! command -v jq >/dev/null 2>&1 || [ -z \"$INPUT\" ]; then exit 0; fi; FILE_PATH=\"$(echo \"$INPUT\" | jq -r '.tool_input.file_path // empty')\"; [ -z \"$FILE_PATH\" ] && exit 0; FILENAME=\"$(basename \"$FILE_PATH\")\"; emit_message() { jq -n --arg msg \"$1\" '{ systemMessage: $msg }'; }; case \"$FILE_PATH\" in *Tests.cs|*Test.cs) TEST_CLASS=\"${FILENAME%.cs}\"; emit_message \"Test file modified: $FILENAME. Consider running: dotnet test --filter $TEST_CLASS\" ;; *.cs) if command -v dotnet >/dev/null 2>&1; then dotnet format --include \"$FILE_PATH\" --verbosity quiet >/dev/null 2>&1 || true; emit_message \"dotnet format applied to $FILENAME\"; else emit_message \"dotnet not found in PATH -- skipping format. Install .NET SDK to enable auto-formatting.\"; fi ;; *.csproj) emit_message \"Project file modified: $FILENAME. Consider running: dotnet restore\" ;; *.xaml) if command -v xmllint >/dev/null 2>&1; then if xmllint --noout \"$FILE_PATH\" 2>/dev/null; then emit_message \"XAML validation: $FILENAME is well-formed\"; else emit_message \"XAML validation: $FILENAME has XML errors. Check for unclosed tags or invalid syntax.\"; fi; else emit_message \"No XML validator found (xmllint) -- skipping XAML validation for $FILENAME\"; fi ;; *) exit 0 ;; esac; exit 0",
-            "timeout": 60
-          }
-        ]
-      }
     ]
   }
 }

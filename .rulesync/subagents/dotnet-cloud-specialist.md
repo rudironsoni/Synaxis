@@ -25,6 +25,8 @@ opencode:
     write: true
 copilot:
   tools: ['read', 'search', 'execute', 'edit']
+codexcli:
+  short-description: '.NET specialist subagent for dotnet-cloud-specialist'
 ---
 
 # dotnet-cloud-specialist

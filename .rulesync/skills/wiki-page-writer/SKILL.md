@@ -7,6 +7,13 @@ tags: ['wiki', 'documentation', 'mermaid']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-page-writer'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-page-writer

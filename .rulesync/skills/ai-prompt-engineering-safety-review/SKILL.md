@@ -9,6 +9,13 @@ license: MIT
 metadata:
   author: GitHub, Inc. (derived)
   version: '0.0.1'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for ai-prompt-engineering-safety-review'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Portions derived from github/awesome-copilot (MIT License). Used under MIT License.

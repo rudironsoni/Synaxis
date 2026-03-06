@@ -7,6 +7,13 @@ tags: ['wiki', 'llm', 'documentation']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-llms-txt'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-llms-txt

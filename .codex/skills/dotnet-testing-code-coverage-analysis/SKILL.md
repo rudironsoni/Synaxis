@@ -10,6 +10,8 @@ description: >
   Keywords: code coverage, coverage analysis, coverage report, Coverlet, Fine
   Code Coverage, dotnet-coverage, ReportGenerator, line coverage, branch
   coverage, cyclomatic complexity, runsettings, cobertura
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-code-coverage-analysis
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

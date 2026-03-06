@@ -10,6 +10,8 @@ description: >
   fundamentals, FIRST principle, FIRST principle, 3A pattern, AAA pattern,
   Arrange Act Assert, Fact, Theory, InlineData, how to write tests, testing best
   practices, create unit test
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-unit-test-fundamentals
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

@@ -14,6 +14,9 @@ codexcli:
   short-description: '.NET skill guidance for AI agent development'
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # dotnet-microsoft-agent-framework

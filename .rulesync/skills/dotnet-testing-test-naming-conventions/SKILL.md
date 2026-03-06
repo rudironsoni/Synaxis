@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: '.NET, testing, naming conventions, test naming, readability'
   related_skills: 'unit-test-fundamentals, test-output-logging, xunit-project-setup'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-test-naming-conventions'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

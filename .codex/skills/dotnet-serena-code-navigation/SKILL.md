@@ -3,6 +3,8 @@ name: dotnet-serena-code-navigation
 description: >-
   Efficient code navigation using Serena MCP symbol operations instead of text
   search
+metadata:
+  short-description: .NET skill guidance for dotnet-serena-code-navigation
 ---
 # dotnet-serena-code-navigation
 

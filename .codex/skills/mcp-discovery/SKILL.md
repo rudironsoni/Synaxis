@@ -5,6 +5,8 @@ description: >-
   Auto-discovers MCP servers from official registries, community sources, and
   local definitions. Triggers on: mcp discovery, find mcp servers, discover mcp,
   mcp registry, mcp catalog.
+metadata:
+  short-description: Toolkit guidance for mcp-discovery
 ---
 # MCP Discovery
 

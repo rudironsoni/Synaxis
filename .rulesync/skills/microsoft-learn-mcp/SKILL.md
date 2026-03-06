@@ -11,6 +11,11 @@ claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+codexcli:
+  short-description: 'Toolkit guidance for microsoft-learn-mcp'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # Microsoft Learn MCP

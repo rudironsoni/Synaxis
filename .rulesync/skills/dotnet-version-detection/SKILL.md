@@ -10,10 +10,13 @@ invocable: true
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
   model: haiku
+copilot: {}
 codexcli:
   short-description: '.NET skill guidance for csharp tasks'
+geminicli: {}
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+antigravity: {}
 ---
 
 ````! dotnet --version 2>/dev/null

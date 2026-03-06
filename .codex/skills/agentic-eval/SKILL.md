@@ -1,6 +1,8 @@
 ---
 name: agentic-eval
 description: Patterns and techniques for evaluating and improving AI agent outputs.
+metadata:
+  short-description: Toolkit guidance for agentic-eval
 ---
 Portions derived from github/awesome-copilot (MIT License). Used under MIT License.
 

@@ -1,6 +1,8 @@
 ---
 name: wiki-llms-txt
 description: Generates llms.txt for LLM-friendly project access
+metadata:
+  short-description: Toolkit guidance for wiki-llms-txt
 ---
 # wiki-llms-txt
 

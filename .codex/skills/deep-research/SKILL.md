@@ -4,6 +4,8 @@ description: >-
   Use when user requests research requiring multiple sources, comprehensive
   analysis, or synthesis across topics - technical research, domain knowledge
   gathering, market analysis, or learning about complex subjects
+metadata:
+  short-description: Toolkit guidance for deep-research
 ---
 # Deep Research
 

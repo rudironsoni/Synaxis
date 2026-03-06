@@ -10,6 +10,8 @@ description: >
   xunit.v3, OutputType Exe, IAsyncLifetime v3, Assert.Skip, SkipUnless,
   SkipWhen, Explicit attribute, MatrixTheoryData, AssemblyFixture, breaking
   changes
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-xunit-upgrade-guide
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

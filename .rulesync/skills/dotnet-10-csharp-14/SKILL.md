@@ -7,6 +7,13 @@ description:
 targets: ['*']
 license: MIT
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-10-csharp-14'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # .NET 10 & C# 14 Best Practices

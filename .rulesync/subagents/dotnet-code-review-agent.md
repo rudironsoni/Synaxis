@@ -24,6 +24,8 @@ opencode:
     write: true
 copilot:
   tools: ['read', 'search', 'execute', 'edit']
+codexcli:
+  short-description: '.NET specialist subagent for dotnet-code-review-agent'
 ---
 
 # dotnet-code-review-agent

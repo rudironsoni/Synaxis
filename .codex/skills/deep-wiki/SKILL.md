@@ -3,6 +3,8 @@ name: deep-wiki
 description: >-
   AI-powered wiki generation for code repositories with commands, agents, and
   skills
+metadata:
+  short-description: Toolkit guidance for deep-wiki
 ---
 # deep-wiki
 

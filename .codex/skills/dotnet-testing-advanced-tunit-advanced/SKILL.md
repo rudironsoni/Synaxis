@@ -11,6 +11,8 @@ description: >
   Matrix Tests, MatrixDataSource, MicrosoftDependencyInjectionDataSource,
   Property, Retry, Timeout, data-driven testing, test filtering,
   WebApplicationFactory TUnit, multi-container orchestration
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-tunit-advanced
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

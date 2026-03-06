@@ -7,6 +7,13 @@ tags: ['wiki', 'agents', 'documentation']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-agents-md'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-agents-md

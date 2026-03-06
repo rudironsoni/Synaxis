@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'xunit, upgrade, migration, v3, breaking-changes, testing-framework'
   related_skills: 'xunit-project-setup, unit-test-fundamentals'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-xunit-upgrade-guide'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

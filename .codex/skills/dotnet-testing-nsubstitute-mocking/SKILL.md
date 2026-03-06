@@ -10,6 +10,8 @@ description: >
   IRepository, IService, Substitute.For, Returns, Received, Throws, Arg.Any,
   Arg.Is, isolate dependencies, simulate external services, dependency injection
   testing
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-nsubstitute-mocking
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

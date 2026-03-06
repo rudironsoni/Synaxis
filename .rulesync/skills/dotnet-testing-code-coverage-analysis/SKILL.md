@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'code-coverage, coverlet, testing-metrics, quality, ci-cd, analysis'
   related_skills: 'unit-test-fundamentals, xunit-project-setup'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-code-coverage-analysis'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

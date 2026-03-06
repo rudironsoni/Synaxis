@@ -1,6 +1,8 @@
 ---
 name: wiki-onboarding
 description: Generates audience-specific onboarding guides
+metadata:
+  short-description: Toolkit guidance for wiki-onboarding
 ---
 # wiki-onboarding
 

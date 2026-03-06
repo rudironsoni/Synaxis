@@ -11,6 +11,8 @@ description: >
   test logging, AbstractLogger, XUnitLogger, CompositeLogger,
   testOutputHelper.WriteLine, test diagnostics, logger mock, test log,
   structured output, Received().Log
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-test-output-logging
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

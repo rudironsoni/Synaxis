@@ -4,6 +4,8 @@ description: >-
   Comprehensive AI prompt engineering safety review and improvement prompt.
   Analyzes prompts for safety, bias, security vulnerabilities, and effectiveness
   while providing detailed improvement recommendations.
+metadata:
+  short-description: Toolkit guidance for ai-prompt-engineering-safety-review
 ---
 Portions derived from github/awesome-copilot (MIT License). Used under MIT License.
 

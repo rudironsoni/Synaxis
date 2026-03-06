@@ -3,6 +3,8 @@ name: rulesync
 description: >-
   Rulesync CLI tool documentation - unified AI rule file management for various
   AI coding tools
+metadata:
+  short-description: Toolkit guidance for rulesync
 ---
 # Rulesync
 

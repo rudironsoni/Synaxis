@@ -1,6 +1,8 @@
 ---
 name: wiki-agents-md
 description: Generates AGENTS.md files for coding agent context
+metadata:
+  short-description: Toolkit guidance for wiki-agents-md
 ---
 # wiki-agents-md
 

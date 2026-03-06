@@ -9,10 +9,13 @@ author: 'dotnet-agent-harness'
 invocable: true
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+copilot: {}
 codexcli:
   short-description: '.NET skill guidance for testing tasks'
+geminicli: {}
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+antigravity: {}
 ---
 
 # dotnet-xunit

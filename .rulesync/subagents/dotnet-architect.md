@@ -24,6 +24,9 @@ opencode:
     write: false
 copilot:
   tools: ['read', 'search', 'execute']
+codexcli:
+  short-description: '.NET specialist subagent for dotnet-architect'
+  sandbox_mode: 'read-only'
 ---
 
 # dotnet-architect

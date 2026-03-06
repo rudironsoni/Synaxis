@@ -12,6 +12,8 @@ description: >
   AppHost testing, distributed testing, AspireAppFixture, IAsyncLifetime,
   ContainerLifetime.Session, cloud-native testing, multi-service integration,
   Aspire.Hosting.Testing, Respawn
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-aspire-testing
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

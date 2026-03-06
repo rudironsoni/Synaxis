@@ -4,6 +4,7 @@
     <Nullable>disable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
   <ItemGroup>

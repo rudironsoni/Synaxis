@@ -7,6 +7,13 @@ tags: ['wiki', 'changelog', 'git']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-changelog'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-changelog

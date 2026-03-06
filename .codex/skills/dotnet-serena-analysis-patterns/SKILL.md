@@ -3,6 +3,8 @@ name: dotnet-serena-analysis-patterns
 description: >-
   Code analysis patterns using Serena MCP for architecture validation and
   pattern detection
+metadata:
+  short-description: .NET skill guidance for dotnet-serena-analysis-patterns
 ---
 # dotnet-serena-analysis-patterns
 

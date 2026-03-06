@@ -1,6 +1,8 @@
 ---
 name: wiki-changelog
 description: Generates structured changelog from git commits
+metadata:
+  short-description: Toolkit guidance for wiki-changelog
 ---
 # wiki-changelog
 

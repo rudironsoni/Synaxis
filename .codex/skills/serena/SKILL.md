@@ -5,6 +5,8 @@ description: >-
   Language Server Protocol (LSP). Enables IDE-like capabilities for finding
   symbols, tracking references, and making precise code edits at the symbol
   level.
+metadata:
+  short-description: Toolkit guidance for serena
 ---
 # Serena: Symbol-Level Code Understanding
 

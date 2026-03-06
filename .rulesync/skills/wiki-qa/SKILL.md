@@ -7,6 +7,13 @@ tags: ['wiki', 'qa', 'documentation']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-qa'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-qa

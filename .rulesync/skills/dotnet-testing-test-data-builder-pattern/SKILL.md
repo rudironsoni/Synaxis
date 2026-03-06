@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'test-data-builder, builder-pattern, fluent-interface, test-readability'
   related_skills: 'autofixture-basics, bogus-fake-data, autofixture-bogus-integration'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-test-data-builder-pattern'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

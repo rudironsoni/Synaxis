@@ -12,6 +12,13 @@ metadata:
   related_skills: 'dotnet-testing-advanced'
   skill_count: 19
   skill_type: 'overview'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

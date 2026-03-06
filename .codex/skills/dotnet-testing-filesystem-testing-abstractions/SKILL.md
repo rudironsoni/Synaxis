@@ -10,6 +10,8 @@ description: >
   IFileSystem, MockFileSystem, System.IO.Abstractions, File.ReadAllText,
   File.WriteAllText, Directory.CreateDirectory, Path.Combine, mock file system,
   file abstraction
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-filesystem-testing-abstractions
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

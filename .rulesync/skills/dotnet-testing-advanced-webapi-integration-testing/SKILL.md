@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'webapi, integration-testing, testcontainers, aspnetcore, clean-architecture'
   related_skills: 'advanced-aspnet-integration-testing, advanced-testcontainers-database, advanced-aspire-testing'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-webapi-integration-testing'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

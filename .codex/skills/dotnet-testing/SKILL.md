@@ -13,6 +13,8 @@ description: >
   principle, assertion, assertion, mock, stub, NSubstitute, test data,
   AutoFixture, Bogus, validator, FluentValidation, TimeProvider, IFileSystem,
   code coverage, ITestOutputHelper, test naming
+metadata:
+  short-description: .NET skill guidance for dotnet-testing
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

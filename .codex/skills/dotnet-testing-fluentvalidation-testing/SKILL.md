@@ -10,6 +10,8 @@ description: >
   UserValidator, CreateOrderValidator, TestHelper, ShouldHaveValidationErrorFor,
   ShouldNotHaveValidationErrorFor, TestValidate, TestValidateAsync, testing
   validators, validating business rules
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-fluentvalidation-testing
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

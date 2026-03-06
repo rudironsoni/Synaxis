@@ -19,6 +19,10 @@ opencode:
     write: true
 copilot:
   tools: ['read', 'search', 'execute', 'edit']
+codexcli:
+  short-description: '.NET skill guidance for dotnet-agent-harness-manifest'
+geminicli: {}
+antigravity: {}
 ---
 
 # dotnet-agent-harness-manifest

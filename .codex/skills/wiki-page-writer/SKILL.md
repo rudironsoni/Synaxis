@@ -1,6 +1,8 @@
 ---
 name: wiki-page-writer
 description: Generates pages with dark-mode Mermaid diagrams
+metadata:
+  short-description: Toolkit guidance for wiki-page-writer
 ---
 # wiki-page-writer
 

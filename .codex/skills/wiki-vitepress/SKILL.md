@@ -1,6 +1,8 @@
 ---
 name: wiki-vitepress
 description: Packages wiki as VitePress dark-theme site
+metadata:
+  short-description: Toolkit guidance for wiki-vitepress
 ---
 # wiki-vitepress
 

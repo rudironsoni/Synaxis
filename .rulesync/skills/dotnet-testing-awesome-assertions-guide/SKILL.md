@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: '.NET, testing, AwesomeAssertions, FluentAssertions, assertions'
   related_skills: 'complex-object-comparison, fluentvalidation-testing, unit-test-fundamentals'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-awesome-assertions-guide'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

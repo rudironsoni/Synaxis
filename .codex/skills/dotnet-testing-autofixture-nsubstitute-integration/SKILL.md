@@ -11,6 +11,8 @@ description: >
   auto-mocking, Frozen, AutoNSubstituteCustomization,
   AutoFixture.AutoNSubstitute, Greedy, fixture.Freeze, Received(), Returns(),
   IMapper, AutoMapper, Mapster, mapper testing
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-autofixture-nsubstitute-integration
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

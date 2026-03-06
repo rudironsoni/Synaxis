@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'xunit, ITestOutputHelper, ILogger, testing, diagnostics, logging'
   related_skills: 'unit-test-fundamentals, nsubstitute-mocking, xunit-project-setup'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-test-output-logging'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

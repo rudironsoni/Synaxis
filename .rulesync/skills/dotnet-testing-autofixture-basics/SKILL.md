@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: '.NET, testing, AutoFixture, test data, anonymous testing'
   related_skills: 'autodata-xunit-integration, autofixture-customization, autofixture-bogus-integration'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-autofixture-basics'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

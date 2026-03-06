@@ -10,6 +10,8 @@ description: >
   Entity validation, excluding properties, circular reference, Excluding,
   Including, ExcludingNestedObjects, RespectingRuntimeTypes, WithStrictOrdering,
   ignore timestamp, exclude timestamp
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-complex-object-comparison
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

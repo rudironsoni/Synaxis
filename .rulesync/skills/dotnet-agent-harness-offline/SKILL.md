@@ -7,6 +7,13 @@ version: '0.0.1'
 author: 'dotnet-agent-harness'
 license: MIT
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-agent-harness-offline'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # Offline Mode

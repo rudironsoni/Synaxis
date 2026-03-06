@@ -14,6 +14,8 @@ description: >
   test, MongoDB test, Redis test, Docker test, container testing, microservice
   test, microservice testing, .NET Aspire, xUnit upgrade, TUnit, framework
   migration
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

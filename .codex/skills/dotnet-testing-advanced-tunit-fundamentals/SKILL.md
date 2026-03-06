@@ -11,6 +11,8 @@ description: >
   generation testing framework, [Test], [Arguments], TUnit.Assertions,
   Assert.That, Before(Test), After(Test), NotInParallel, TUnit.Templates,
   Microsoft.Testing.Platform, TUnit vs xUnit, parallel execution
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-tunit-fundamentals
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

@@ -13,6 +13,9 @@ codexcli:
   short-description: '.NET skill guidance for csharp tasks'
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # dotnet-native-interop

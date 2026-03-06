@@ -12,6 +12,8 @@ description: >
   RandomDateTimeSequenceGenerator, NumericRangeBuilder, DataAnnotations
   autofixture, fixture.Customizations, Insert(0), custom builder, NoSpecimen,
   generic builder
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-autofixture-customization
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

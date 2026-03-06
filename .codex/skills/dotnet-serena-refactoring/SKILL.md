@@ -1,6 +1,8 @@
 ---
 name: dotnet-serena-refactoring
 description: Symbol-level refactoring with automatic reference updates using Serena MCP
+metadata:
+  short-description: .NET skill guidance for dotnet-serena-refactoring
 ---
 # dotnet-serena-refactoring
 

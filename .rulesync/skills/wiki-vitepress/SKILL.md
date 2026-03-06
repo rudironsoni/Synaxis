@@ -7,6 +7,13 @@ tags: ['wiki', 'vitepress', 'documentation']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-vitepress'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-vitepress

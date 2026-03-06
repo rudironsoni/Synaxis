@@ -24,6 +24,10 @@ opencode:
     write: false
 copilot:
   tools: ['read', 'search', 'execute']
+codexcli:
+  short-description: 'Toolkit guidance for mcp-health'
+geminicli: {}
+antigravity: {}
 ---
 
 # MCP Health

@@ -10,6 +10,8 @@ description: >
   DateTime.Now, time-dependent, cache expiration, token expiration,
   Microsoft.Bcl.TimeProvider, GetUtcNow, SetUtcNow, Advance, time freeze, time
   freezing, time fast-forward
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-datetime-testing-timeprovider
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

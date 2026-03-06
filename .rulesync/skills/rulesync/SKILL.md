@@ -4,6 +4,13 @@ description: >-
   Rulesync CLI tool documentation - unified AI rule file management for various AI coding tools
 targets: ['*']
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for rulesync'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # Rulesync

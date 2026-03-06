@@ -10,6 +10,8 @@ description: >
   three-part naming, three-part naming, method_scenario_expected,
   method_scenario_expected, how to name tests, test readability, naming best
   practices, test report, test documentation
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-test-naming-conventions
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

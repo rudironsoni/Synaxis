@@ -1,6 +1,8 @@
 ---
 name: wiki-researcher
 description: Deep research with evidence-based analysis
+metadata:
+  short-description: Toolkit guidance for wiki-researcher
 ---
 # wiki-researcher
 

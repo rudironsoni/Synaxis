@@ -1,6 +1,8 @@
 ---
 name: wiki-ado-convert
 description: Converts VitePress wiki to Azure DevOps Wiki-compatible format
+metadata:
+  short-description: Toolkit guidance for wiki-ado-convert
 ---
 # wiki-ado-convert
 

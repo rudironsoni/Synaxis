@@ -10,6 +10,8 @@ description: >
   create test project, project structure, project structure, folder structure,
   xunit package, nuget packages, testing packages, how to create test project,
   xunit configuration
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-xunit-project-setup
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

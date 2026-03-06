@@ -6,6 +6,13 @@ tags: ['dotnet', 'serena', 'refactoring', 'productivity', 'skill']
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 license: 'MIT'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-serena-refactoring'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # dotnet-serena-refactoring

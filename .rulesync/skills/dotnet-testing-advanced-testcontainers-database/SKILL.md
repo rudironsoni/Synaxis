@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: '.NET, testing, Testcontainers, database, SQL Server, PostgreSQL'
   related_skills: 'advanced-testcontainers-nosql, advanced-aspnet-integration-testing, advanced-aspire-testing'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-testcontainers-database'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

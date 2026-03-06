@@ -5,6 +5,8 @@ description: >-
   modular monolith patterns, or feature folders; when implementing HTTP
   resilience, Options pattern, Channels, or validation; when seeing outdated
   patterns like old extension method syntax
+metadata:
+  short-description: .NET skill guidance for dotnet-10-csharp-14
 ---
 # .NET 10 & C# 14 Best Practices
 

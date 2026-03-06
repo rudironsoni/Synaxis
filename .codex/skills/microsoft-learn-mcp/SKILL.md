@@ -3,6 +3,8 @@ name: microsoft-learn-mcp
 description: >-
   Microsoft Learn MCP Server integration for accessing official Microsoft
   documentation
+metadata:
+  short-description: Toolkit guidance for microsoft-learn-mcp
 ---
 # Microsoft Learn MCP
 

@@ -10,6 +10,8 @@ description: >
   fake name, fake address, fake email, Faker<T>, RuleFor, Generate, faker.Name,
   faker.Address, faker.Internet, generate fake data, generate fake data, seed
   data
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-bogus-fake-data
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

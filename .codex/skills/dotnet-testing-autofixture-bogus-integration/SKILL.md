@@ -10,6 +10,8 @@ description: >
   Faker, EmailSpecimenBuilder, PhoneSpecimenBuilder, NameSpecimenBuilder,
   realistic test data, semantic data, hybrid generator, HybridTestDataGenerator,
   OmitOnRecursionBehavior, circular reference
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-autofixture-bogus-integration
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

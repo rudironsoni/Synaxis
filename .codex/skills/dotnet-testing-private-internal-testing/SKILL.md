@@ -10,6 +10,8 @@ description: >
   reflection testing, GetMethod BindingFlags,
   Meziantou.MSBuild.InternalsVisibleTo, testability design, strategy pattern
   refactoring, testability
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-private-internal-testing
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

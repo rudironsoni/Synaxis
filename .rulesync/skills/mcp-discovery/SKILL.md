@@ -25,6 +25,10 @@ opencode:
     write: false
 copilot:
   tools: ['read', 'search', 'execute']
+codexcli:
+  short-description: 'Toolkit guidance for mcp-discovery'
+geminicli: {}
+antigravity: {}
 ---
 
 # MCP Discovery

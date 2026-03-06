@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'autofixture, xunit, autodata, theory, parameterized-tests, customization'
   related_skills: 'autofixture-basics, autofixture-customization, autofixture-nsubstitute-integration'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-autodata-xunit-integration'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

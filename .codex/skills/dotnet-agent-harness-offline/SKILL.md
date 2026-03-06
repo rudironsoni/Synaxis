@@ -1,6 +1,8 @@
 ---
 name: dotnet-agent-harness-offline
 description: Offline mode with local caching for air-gapped environments
+metadata:
+  short-description: .NET skill guidance for dotnet-agent-harness-offline
 ---
 # Offline Mode
 

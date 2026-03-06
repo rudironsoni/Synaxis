@@ -11,6 +11,8 @@ description: >
   API testing, Microsoft.AspNetCore.Mvc.Testing, CreateClient, ConfigureWebHost,
   AwesomeAssertions.Web, Be200Ok, Be404NotFound, middleware testing, dependency
   injection testing
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-aspnet-integration-testing
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

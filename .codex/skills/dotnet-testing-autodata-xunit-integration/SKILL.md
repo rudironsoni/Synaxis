@@ -10,6 +10,8 @@ description: >
   [InlineAutoData], AutoDataAttribute, ICustomization, DataAttribute,
   parameterized test, Theory AutoData, MemberAutoData, test data attributes,
   fixture.Customize
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-autodata-xunit-integration
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

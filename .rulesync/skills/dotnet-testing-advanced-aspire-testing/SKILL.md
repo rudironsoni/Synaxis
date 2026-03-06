@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'aspire, distributed-testing, cloud-native, testcontainers, integration-testing'
   related_skills: 'advanced-testcontainers-database, advanced-webapi-integration-testing, advanced-testcontainers-nosql'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-aspire-testing'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

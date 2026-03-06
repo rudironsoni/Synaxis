@@ -1,6 +1,8 @@
 ---
 name: wiki-architect
 description: Analyzes repos and generates structured catalogues
+metadata:
+  short-description: Toolkit guidance for wiki-architect
 ---
 # wiki-architect
 

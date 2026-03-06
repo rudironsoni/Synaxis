@@ -4,6 +4,8 @@ description: >-
   GitHub MCP Server integration for repository operations, pull requests,
   issues, and GitHub Actions. Triggers on: github mcp, github operations, pull
   request, issue, repository, github actions, commit, branch, merge.
+metadata:
+  short-description: Toolkit guidance for github
 ---
 # GitHub MCP
 

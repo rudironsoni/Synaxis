@@ -1,6 +1,8 @@
 ---
 name: dotnet-agent-harness-test-framework
 description: Comprehensive testing framework for skills
+metadata:
+  short-description: Validate authored dotnet-agent-harness skill test cases
 ---
 # Skill Testing Framework
 
@@ -48,8 +50,8 @@ teardown:
 
 - `dotnet-agent-harness:test <skill>` - Run all tests
 - `dotnet-agent-harness:test <skill> --filter basic` - Filter tests
-- `dotnet-agent-harness:test --all` - Test all skills
-- `dotnet-agent-harness:test --watch` - Watch mode
+- `dotnet-agent-harness:test all` - Test all skills
+- `dotnet-agent-harness:test all --format junit --output results.xml` - Emit CI-friendly reports
 
 ## Test Types
 
@@ -84,7 +86,8 @@ Results: 2 passed, 1 failed
 ```yaml
 - name: Test Skills
   run: |
-    dotnet-agent-harness:test --all --format junit > results.xml
+    dotnet agent-harness test all --format junit --output results.xml
+    dotnet-agent-harness:test all --format junit --output results.xml
 
 - name: Upload Results
   uses: actions/upload-artifact@v4

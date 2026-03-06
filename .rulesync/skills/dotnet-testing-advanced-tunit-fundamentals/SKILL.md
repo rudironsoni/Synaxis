@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'tunit, testing-framework, source-generator, aot, modern-testing, performance'
   related_skills: 'advanced-tunit-advanced, xunit-project-setup, unit-test-fundamentals'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-advanced-tunit-fundamentals'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

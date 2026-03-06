@@ -6,6 +6,13 @@ description:
 targets: ['*']
 license: MIT
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for serena'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # Serena: Symbol-Level Code Understanding

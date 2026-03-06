@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'private-testing, internal-testing, InternalsVisibleTo, reflection, testability, design'
   related_skills: 'nsubstitute-mocking, unit-test-fundamentals, test-naming-conventions'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-private-internal-testing'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

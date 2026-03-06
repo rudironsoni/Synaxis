@@ -10,6 +10,13 @@ metadata:
   version: '1.0.0'
   tags: 'autofixture, bogus, test-data, faker, integration, semantic-data'
   related_skills: 'autofixture-basics, bogus-fake-data, test-data-builder-pattern'
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: '.NET skill guidance for dotnet-testing-autofixture-bogus-integration'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.

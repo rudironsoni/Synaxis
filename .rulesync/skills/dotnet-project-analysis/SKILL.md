@@ -10,10 +10,13 @@ invocable: true
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
   model: haiku
+copilot: {}
 codexcli:
   short-description: '.NET skill guidance for foundation tasks'
+geminicli: {}
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+antigravity: {}
 ---
 
 ````! find . -maxdepth 3 ( -name "*.csproj" -o -name "*.sln" -o -name "*.slnx" ) 2>/dev/null | head -20

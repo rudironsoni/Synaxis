@@ -1,6 +1,8 @@
 ---
 name: wiki-qa
 description: Answers questions about the repository
+metadata:
+  short-description: Toolkit guidance for wiki-qa
 ---
 # wiki-qa
 

@@ -10,6 +10,8 @@ description: >
   anonymous testing, anonymous testing, fixture.Create, CreateMany,
   fixture.Build, Create<T>, AutoFixture.Xunit2, OmitOnRecursionBehavior,
   IFixture, generate test data, generate test data
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-autofixture-basics
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

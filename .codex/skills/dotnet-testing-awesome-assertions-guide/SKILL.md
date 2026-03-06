@@ -10,6 +10,8 @@ description: >
   assertion, Should(), Be(), BeEquivalentTo, Contain, ThrowAsync, NotBeNull,
   object comparison, collection validation, exception assertion,
   AwesomeAssertions, FluentAssertions, fluent syntax
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-awesome-assertions-guide
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

@@ -7,6 +7,13 @@ tags: ['wiki', 'architecture', 'analysis']
 version: '1.0.0'
 author: 'microsoft'
 invocable: true
+claudecode: {}
+opencode: {}
+codexcli:
+  short-description: 'Toolkit guidance for wiki-architect'
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # wiki-architect

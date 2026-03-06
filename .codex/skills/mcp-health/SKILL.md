@@ -5,6 +5,8 @@ description: >-
   servers for availability, reports connection status, and provides fallback
   guidance. Triggers on: mcp health, check mcp, validate mcp, mcp status, mcp
   connectivity.
+metadata:
+  short-description: Toolkit guidance for mcp-health
 ---
 # MCP Health
 

@@ -10,6 +10,8 @@ description: >
   mother, fluent interface, fluent interface, UserBuilder, ProductBuilder,
   .With(), .Build(), AUser(), test data preparation, complex object creation,
   semantic testing
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-test-data-builder-pattern
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

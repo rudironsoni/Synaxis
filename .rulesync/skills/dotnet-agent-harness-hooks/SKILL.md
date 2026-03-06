@@ -15,6 +15,9 @@ codexcli:
   short-description: 'Hooks + MCP integration guide'
 opencode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
+copilot: {}
+geminicli: {}
+antigravity: {}
 ---
 
 # dotnet-agent-harness-hooks

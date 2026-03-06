@@ -5,6 +5,8 @@ description: >-
   conflicts, version compatibility, and provides validation and resolution
   tools. Triggers on: skill manifest, dependency resolution, skill
   compatibility, version conflicts, build manifest, validate dependencies.
+metadata:
+  short-description: .NET skill guidance for dotnet-agent-harness-manifest
 ---
 # dotnet-agent-harness-manifest
 

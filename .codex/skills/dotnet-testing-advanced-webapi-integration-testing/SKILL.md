@@ -12,6 +12,8 @@ description: >
   ValidationProblemDetails, AwesomeAssertions, Flurl, Respawn, Be201Created,
   Be400BadRequest, multi-container testing, Collection Fixture, global exception
   handling
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-webapi-integration-testing
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

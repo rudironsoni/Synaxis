@@ -11,6 +11,8 @@ description: >
   test, redis integration test, nosql testing, MongoDbContainer, RedisContainer,
   IMongoDatabase, IConnectionMultiplexer, BSON serialization, BsonDocument,
   document model testing, cache testing, Collection Fixture
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-testcontainers-nosql
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 

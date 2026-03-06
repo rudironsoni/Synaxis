@@ -10,6 +10,8 @@ description: >
   PostgreSqlContainer, MySqlContainer, EF Core testing, Dapper testing,
   Testcontainers.MsSql, Testcontainers.PostgreSql, GetConnectionString,
   IAsyncLifetime, CollectionFixture
+metadata:
+  short-description: .NET skill guidance for dotnet-testing-advanced-testcontainers-database
 ---
 Source: kevintsengtw/dotnet-testing-agent-skills (MIT). Ported into dotnet-agent-harness.
 
