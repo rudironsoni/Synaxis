@@ -4,8 +4,18 @@
     <Nullable>disable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <!-- Disable default globbing to prevent CS2001 errors -->
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
+
+  <!-- Explicitly include source files -->
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <Compile Include="Controllers/**/*.cs" />
+    <Compile Include="Extensions/**/*.cs" />
+    <Compile Include="Middleware/**/*.cs" />
+    <Compile Include="Filters/**/*.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.Npgsql" />
