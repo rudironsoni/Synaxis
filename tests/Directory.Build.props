@@ -4,6 +4,8 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!-- Disable nullable to fix CS8632 errors -->
     <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>CS8632;CS8625;CS8618;CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
