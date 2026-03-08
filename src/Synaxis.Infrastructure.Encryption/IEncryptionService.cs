@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Encryption;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
 
 using System.Threading;
 using System.Threading.Tasks;

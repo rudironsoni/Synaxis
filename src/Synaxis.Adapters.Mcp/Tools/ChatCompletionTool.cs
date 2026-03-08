@@ -9,9 +9,9 @@ namespace Synaxis.Adapters.Mcp.Tools
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
     using Synaxis.Commands.Chat;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// MCP tool for generating chat completions using AI models.

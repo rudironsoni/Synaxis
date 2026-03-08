@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.Agents.Domain.Aggregates;
 using Synaxis.Agents.Domain.Events;
 using Synaxis.Agents.Infrastructure.Repositories;
@@ -250,20 +250,20 @@ public class AgentExecutionRepositoryTests
         var aggregate = new AgentExecution();
 
         // Use reflection to set the Id
-        var idProperty = typeof(Synaxis.Infrastructure.EventSourcing.AggregateRoot).GetProperty("Id");
+        var idProperty = typeof(Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing.AggregateRoot).GetProperty("Id");
         idProperty!.SetValue(aggregate, id.ToString());
 
         // Add uncommitted events via reflection
         if (uncommittedEvents.Count > 0)
         {
-            var uncommittedEventsField = typeof(Synaxis.Infrastructure.EventSourcing.AggregateRoot)
+            var uncommittedEventsField = typeof(Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing.AggregateRoot)
                 .GetField("_uncommittedEvents", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var list = (List<IDomainEvent>)uncommittedEventsField!.GetValue(aggregate)!;
             list.AddRange(uncommittedEvents);
         }
 
         // Set version via reflection
-        var versionProperty = typeof(Synaxis.Infrastructure.EventSourcing.AggregateRoot).GetProperty("Version");
+        var versionProperty = typeof(Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing.AggregateRoot).GetProperty("Version");
         versionProperty!.SetValue(aggregate, version);
 
         return aggregate;

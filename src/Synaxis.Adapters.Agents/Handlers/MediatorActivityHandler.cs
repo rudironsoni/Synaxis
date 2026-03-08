@@ -9,10 +9,10 @@ namespace Synaxis.Adapters.Agents.Handlers
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
     using Synaxis.Adapters.Agents.State;
-    using Synaxis.Contracts.V1.Commands;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Commands;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Activity handler that routes messages to Synaxis command executor.

@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Messaging;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Processes outbox messages by publishing them to the message bus with retry logic.

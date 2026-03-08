@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Messaging;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Cosmos DB implementation of the outbox pattern using Change Feed.

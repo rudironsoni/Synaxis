@@ -5,13 +5,13 @@
 namespace Synaxis.Api.Extensions;
 
 using Microsoft.EntityFrameworkCore;
-using Synaxis.Core.Contracts;
-using Synaxis.Infrastructure.Configuration;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.MultiRegion;
-using Synaxis.Infrastructure.Repositories;
-using Synaxis.Infrastructure.Services;
-using Synaxis.Infrastructure.Services.SuperAdmin;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Infrastructure.Configuration;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.MultiRegion;
+using Synaxis.Shared.Kernel.Infrastructure.Repositories;
+using Synaxis.Shared.Kernel.Infrastructure.Services;
+using Synaxis.Shared.Kernel.Infrastructure.Services.SuperAdmin;
 using Synaxis.Providers;
 
 /// <summary>
@@ -66,15 +66,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditArchivalService, AuditArchivalService>();
 
         // Audit query and export services
-        services.AddScoped<Synaxis.Infrastructure.Services.Audit.IAuditQueryService, Synaxis.Infrastructure.Services.Audit.AuditQueryService>();
-        services.AddScoped<Synaxis.Infrastructure.Services.Audit.IAuditExportService, Synaxis.Infrastructure.Services.Audit.AuditExportService>();
+        services.AddScoped<Synaxis.Shared.Kernel.Infrastructure.Services.Audit.IAuditQueryService, Synaxis.Shared.Kernel.Infrastructure.Services.Audit.AuditQueryService>();
+        services.AddScoped<Synaxis.Shared.Kernel.Infrastructure.Services.Audit.IAuditExportService, Synaxis.Shared.Kernel.Infrastructure.Services.Audit.AuditExportService>();
 
         // Audit alert services
-        services.AddScoped<Synaxis.Infrastructure.EventHandlers.Audit.IAuditAlertService, Synaxis.Infrastructure.EventHandlers.Audit.AuditAlertService>();
+        services.AddScoped<Synaxis.Shared.Kernel.Infrastructure.EventHandlers.Audit.IAuditAlertService, Synaxis.Shared.Kernel.Infrastructure.EventHandlers.Audit.AuditAlertService>();
 
         // Audit event handlers
-        services.AddScoped<Synaxis.Infrastructure.EventHandlers.Audit.AuditAlertHandler>();
-        services.AddScoped<Synaxis.Infrastructure.EventHandlers.Audit.SuspiciousActivityDetectedHandler>();
+        services.AddScoped<Synaxis.Shared.Kernel.Infrastructure.EventHandlers.Audit.AuditAlertHandler>();
+        services.AddScoped<Synaxis.Shared.Kernel.Infrastructure.EventHandlers.Audit.SuspiciousActivityDetectedHandler>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();

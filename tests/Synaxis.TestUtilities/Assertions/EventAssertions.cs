@@ -7,7 +7,7 @@ namespace Synaxis.TestUtilities.Assertions;
 using System.Diagnostics.CodeAnalysis;
 using FluentAssertions;
 using FluentAssertions.Collections;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.TestUtilities.Aggregates;
 
 /// <summary>

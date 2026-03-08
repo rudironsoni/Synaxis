@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Migrations.Execution;
+namespace Synaxis.Shared.Kernel.Infrastructure.Tests.Migrations.Execution;
 
 using System;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Synaxis.Infrastructure.Data.Migrations.Execution;
+using Synaxis.Shared.Kernel.Infrastructure.Data.Migrations.Execution;
 using Xunit;
 
 /// <summary>

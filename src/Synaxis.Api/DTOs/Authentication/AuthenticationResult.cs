@@ -4,7 +4,7 @@
 
 namespace Synaxis.Api.DTOs.Authentication
 {
-    using Synaxis.Core.Models;
+    using Synaxis.Shared.Kernel.Domain.Models;
 
     /// <summary>
     /// Represents the result of an authentication operation.

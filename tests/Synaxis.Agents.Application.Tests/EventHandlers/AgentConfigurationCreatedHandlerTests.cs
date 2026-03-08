@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Synaxis.Agents.Application.EventHandlers;
 using Synaxis.Agents.Domain.Events;
-using Synaxis.Core.Contracts;
+using Synaxis.Shared.Kernel.Domain.Contracts;
 using Xunit;
 
 /// <summary>

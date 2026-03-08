@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using global::Polly;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Azure Container Apps implementation of IContainerPlatform.

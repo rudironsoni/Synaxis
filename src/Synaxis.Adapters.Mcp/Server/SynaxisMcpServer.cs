@@ -9,11 +9,11 @@ namespace Synaxis.Adapters.Mcp.Server
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
     using Synaxis.Adapters.Mcp.Tools;
     using Synaxis.Commands.Chat;
     using Synaxis.Commands.Embeddings;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// MCP server implementation that exposes Synaxis capabilities as tools.

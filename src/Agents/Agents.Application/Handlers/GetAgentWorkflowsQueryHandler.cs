@@ -1,3 +1,4 @@
+using Synaxis.Shared.Contracts;
 // <copyright file="GetAgentWorkflowsQueryHandler.cs" company="Synaxis">
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
@@ -12,10 +13,10 @@ using System.Threading.Tasks;
 using Mediator;
 using Synaxis.Agents.Application.Interfaces;
 using Synaxis.Agents.Application.Queries;
-using Synaxis.Contracts.V2.Common;
-using Synaxis.Contracts.V2.DTOs;
+using Synaxis.Shared.Contracts.V2.Common;
+using Synaxis.Shared.Contracts.V2.DTOs;
 using DomainAgentStatus = Synaxis.Agents.Domain.ValueObjects.AgentStatus;
-using WorkflowStatus = Synaxis.Contracts.V2.Common.WorkflowStatus;
+using WorkflowStatus = Synaxis.Shared.Contracts.V2.Common.WorkflowStatus;
 
 /// <summary>
 /// Handler for <see cref="GetAgentWorkflowsQuery"/>.

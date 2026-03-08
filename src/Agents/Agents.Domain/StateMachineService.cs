@@ -2,10 +2,11 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Agents.Domain;
-
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Agents.Domain.Events;
+
+using Synaxis.Shared.Kernel.Application.Cloud;
+
+namespace Synaxis.Agents.Domain;
 
 /// <summary>
 /// Domain service for managing agent execution state transitions.

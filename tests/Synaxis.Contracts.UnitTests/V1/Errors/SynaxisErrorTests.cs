@@ -1,7 +1,7 @@
-namespace Synaxis.Contracts.Tests.V1.Errors;
+namespace Synaxis.Shared.Contracts.Tests.V1.Errors;
 
 using FluentAssertions;
-using Synaxis.Contracts.V1.Errors;
+using Synaxis.Shared.Contracts.V1.Errors;
 
 [Trait("Category", "Unit")]
 public class SynaxisErrorTests

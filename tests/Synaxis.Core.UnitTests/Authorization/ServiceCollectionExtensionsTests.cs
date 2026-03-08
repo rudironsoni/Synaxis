@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Core.Authorization.Tests;
+namespace Synaxis.Shared.Kernel.Domain.Authorization.Tests;
 
 using System.Linq;
 using FluentAssertions;

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.Agents.Domain.Aggregates;
 using Synaxis.Agents.Domain.Events;
 using Synaxis.Agents.Domain.ValueObjects;
@@ -313,14 +313,14 @@ public class AgentConfigurationRepositoryTests
         aggregate.MarkAsCommitted();
 
         // Use reflection to set the Version property via its private setter
-        var versionProperty = typeof(Synaxis.Infrastructure.EventSourcing.AggregateRoot)
+        var versionProperty = typeof(Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing.AggregateRoot)
             .GetProperty("Version", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
         versionProperty!.SetValue(aggregate, version);
 
         // Add uncommitted events via reflection (they're in a private list)
         if (uncommittedEvents.Count > 0)
         {
-            var uncommittedEventsField = typeof(Synaxis.Infrastructure.EventSourcing.AggregateRoot)
+            var uncommittedEventsField = typeof(Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing.AggregateRoot)
                 .GetField("_uncommittedEvents", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var list = (List<IDomainEvent>)uncommittedEventsField!.GetValue(aggregate)!;
             list.AddRange(uncommittedEvents);

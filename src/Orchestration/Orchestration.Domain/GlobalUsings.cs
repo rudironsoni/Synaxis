@@ -1,2 +1,2 @@
-global using Synaxis.Abstractions.Cloud;
-global using Synaxis.Infrastructure.EventSourcing;
+global using Synaxis.Shared.Kernel.Application.Cloud;
+global using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;

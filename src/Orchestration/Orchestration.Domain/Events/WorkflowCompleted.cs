@@ -5,7 +5,7 @@
 namespace Synaxis.Orchestration.Domain.Events;
 
 using MediatR;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Event raised when a workflow completes successfully.

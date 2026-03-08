@@ -10,8 +10,8 @@ namespace Synaxis.Providers.OpenAI
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Abstractions.Providers;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Kernel.Application.Providers;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// OpenAI implementation of <see cref="IAudioProvider"/> using Whisper.

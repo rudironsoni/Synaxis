@@ -2,10 +2,11 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.EventSourcing;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Abstractions.Time;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Application.Time;
+using Synaxis.Shared.Kernel.Application.Time;
 
 /// <summary>
 /// Base class for event-sourced aggregates that apply domain events to maintain state.

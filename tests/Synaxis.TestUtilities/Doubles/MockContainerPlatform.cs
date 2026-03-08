@@ -7,7 +7,7 @@ namespace Synaxis.TestUtilities.Doubles;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// In-memory mock implementation of <see cref="IContainerPlatform"/> for testing.

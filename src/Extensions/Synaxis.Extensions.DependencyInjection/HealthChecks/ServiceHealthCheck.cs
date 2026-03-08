@@ -7,10 +7,10 @@ namespace Synaxis.Extensions.DependencyInjection.HealthChecks;
 using System.Collections.ObjectModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.Encryption;
-using Synaxis.Infrastructure.EventSourcing;
-using Synaxis.Infrastructure.Messaging;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 
 /// <summary>
 /// Health check for validating service dependencies.
@@ -53,7 +53,7 @@ public class ServiceHealthCheck : IHealthCheck
 
         try
         {
-            this.CheckService<Abstractions.Cloud.IEventStore>("EventStore", data, ref degraded);
+            this.CheckService<Shared.Kernel.Application.Cloud.IEventStore>("EventStore", data, ref degraded);
             this.CheckService<IEncryptionService>("EncryptionService", data, ref degraded);
             this.CheckService<IMessageBus>("MessageBus", data, ref degraded);
             this.CheckService<IOutbox>("Outbox", data, ref degraded);

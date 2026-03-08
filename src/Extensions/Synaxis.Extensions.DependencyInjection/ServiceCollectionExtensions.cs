@@ -8,12 +8,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.Configuration.Options;
 using Synaxis.Extensions.DependencyInjection.HealthChecks;
-using Synaxis.Infrastructure.Encryption;
-using Synaxis.Infrastructure.EventSourcing;
-using Synaxis.Infrastructure.Messaging;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 using Synaxis.Providers.Azure;
 using Synaxis.Providers.Azure.EventStores;
 
@@ -79,7 +79,7 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddSingleton<Abstractions.Cloud.IEventStore, InMemoryEventStore>();
+        services.TryAddSingleton<Shared.Kernel.Application.Cloud.IEventStore, InMemoryEventStore>();
         services.TryAddSingleton<ISnapshotStrategy, NoSnapshotStrategy>();
 
         return services;

@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests;
 
 using System;
 using System.Linq;
@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.Messaging;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 using Xunit;
 
 /// <summary>
@@ -95,7 +95,7 @@ using Xunit;
 
         // Assert
         messages.Should().HaveCount(1);
-        messages[0].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.TestEvent");
+        messages[0].EventType.Should().Be("Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.TestEvent");
     }
 
     [Fact]
@@ -212,8 +212,8 @@ using Xunit;
 
         // Assert
         messages.Should().HaveCount(2);
-        messages[0].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.TestEvent");
-        messages[1].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.AnotherTestEvent");
+        messages[0].EventType.Should().Be("Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.TestEvent");
+        messages[1].EventType.Should().Be("Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.AnotherTestEvent");
     }
 
     [Fact]

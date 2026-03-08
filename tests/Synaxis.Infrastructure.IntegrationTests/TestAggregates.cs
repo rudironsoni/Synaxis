@@ -2,10 +2,10 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests;
 
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Sample aggregate root for testing.

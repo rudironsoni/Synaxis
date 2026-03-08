@@ -2,10 +2,10 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.EventSourcing;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 using System.Collections.Concurrent;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Abstract base class for event store implementations.

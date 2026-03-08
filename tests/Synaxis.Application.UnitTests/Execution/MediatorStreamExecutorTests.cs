@@ -13,7 +13,7 @@ namespace Synaxis.Tests.Execution
     using FluentAssertions;
     using Mediator;
     using NSubstitute;
-    using Synaxis.Abstractions.Commands;
+    using Synaxis.Shared.Kernel.Application.Commands;
     using Synaxis.Execution;
     using Xunit;
 
@@ -200,7 +200,7 @@ namespace Synaxis.Tests.Execution
             yield return new TestResult { Value = "Should not reach here" };
         }
 
-        public sealed record TestRequest : Synaxis.Abstractions.Commands.IStreamRequest<TestResult>, global::Mediator.IStreamRequest<TestResult>;
+        public sealed record TestRequest : Synaxis.Shared.Kernel.Application.Commands.IStreamRequest<TestResult>, global::Mediator.IStreamRequest<TestResult>;
 
         public sealed record TestResult
         {

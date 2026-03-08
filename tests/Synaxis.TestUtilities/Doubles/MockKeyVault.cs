@@ -6,7 +6,7 @@ namespace Synaxis.TestUtilities.Doubles;
 
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// A mock implementation of <see cref="IKeyVault"/> for testing purposes.

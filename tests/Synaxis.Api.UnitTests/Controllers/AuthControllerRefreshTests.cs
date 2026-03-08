@@ -17,10 +17,10 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Synaxis.Api.Controllers;
 using Synaxis.Api.DTOs.Authentication;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Services;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.Services;
 using Xunit;
 
 /// <summary>
@@ -96,7 +96,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var authResult = okResult.Value.Should().BeAssignableTo<Core.Contracts.AuthenticationResult>().Subject;
+        var authResult = okResult.Value.Should().BeAssignableTo<Shared.Kernel.Domain.Contracts.AuthenticationResult>().Subject;
 
         authResult.Should().NotBeNull();
         authResult.Success.Should().BeTrue();
@@ -273,7 +273,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         // Act - First refresh
         var request1 = new RefreshTokenRequest { RefreshToken = token1Value };
         var result1 = await _controller.RefreshToken(request1);
-        var authResult1 = (result1.Result as OkObjectResult).Value as Core.Contracts.AuthenticationResult;
+        var authResult1 = (result1.Result as OkObjectResult).Value as Shared.Kernel.Domain.Contracts.AuthenticationResult;
         var token2Hash = authResult1.RefreshToken;
 
         // Act - Second refresh
@@ -330,7 +330,7 @@ public sealed class AuthControllerRefreshTests : IDisposable
         // Act
         var result = await _controller.RefreshToken(request);
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        var authResult = okResult.Value.Should().BeAssignableTo<Core.Contracts.AuthenticationResult>().Subject;
+        var authResult = okResult.Value.Should().BeAssignableTo<Shared.Kernel.Domain.Contracts.AuthenticationResult>().Subject;
 
         // Assert
         var isValid = await _authenticationService.ValidateTokenAsync(authResult.AccessToken);

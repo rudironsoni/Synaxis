@@ -2,13 +2,14 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Orchestration.Infrastructure.Services;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Orchestration.Domain.Aggregates;
+
+using Synaxis.Shared.Kernel.Application.Cloud;
+
+namespace Synaxis.Orchestration.Infrastructure.Services;
 
 /// <summary>
 /// Background service that schedules and executes jobs from the event store.

@@ -11,7 +11,7 @@ namespace Synaxis.Transport.Grpc.Services
     using Mediator;
     using Microsoft.Extensions.Logging;
     using Synaxis.Commands.Chat;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Transport.Grpc.V1;
 
     /// <summary>

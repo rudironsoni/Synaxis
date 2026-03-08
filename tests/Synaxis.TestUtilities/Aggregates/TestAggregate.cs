@@ -5,8 +5,8 @@
 namespace Synaxis.TestUtilities.Aggregates;
 
 using System.Collections.Immutable;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Base class for test aggregates providing helper methods for event application and state verification.

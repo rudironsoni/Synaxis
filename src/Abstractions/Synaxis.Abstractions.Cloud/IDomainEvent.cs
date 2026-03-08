@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Abstractions.Cloud;
+namespace Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Base interface for domain events in the system.

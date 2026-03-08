@@ -13,8 +13,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
 
 /// <summary>
 /// Implementation of audit export service.

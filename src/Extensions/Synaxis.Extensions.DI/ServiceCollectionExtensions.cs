@@ -6,12 +6,12 @@ namespace Synaxis.Extensions.DI;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Abstractions.Time;
-using Synaxis.Contracts.V1.Messages;
-using Synaxis.Infrastructure.Encryption;
-using Synaxis.Infrastructure.EventSourcing;
-using Synaxis.Infrastructure.Messaging;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Application.Time;
+using Synaxis.Shared.Contracts.V1.Messages;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 using Synaxis.Providers.Azure;
 using Synaxis.Providers.Azure.EventStores;
 

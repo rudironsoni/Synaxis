@@ -5,7 +5,7 @@
 namespace Synaxis.Agents.Infrastructure.Repositories;
 
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.Agents.Application.Interfaces;
 using Synaxis.Agents.Domain.Aggregates;
 using Synaxis.Agents.Domain.ValueObjects;

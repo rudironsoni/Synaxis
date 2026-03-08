@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Synaxis.Contracts.V1.Messages;
+using Synaxis.Shared.Contracts.V1.Messages;
 
 namespace Synaxis.Samples.Microservices;
 

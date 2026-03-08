@@ -7,8 +7,8 @@ namespace Synaxis.TestUtilities.Builders;
 using System;
 using AutoFixture;
 using AutoFixture.Kernel;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Customizations for AutoFixture to generate test data for Synaxis types.

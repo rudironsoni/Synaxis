@@ -4,7 +4,7 @@
 
 #nullable enable
 
-namespace Synaxis.Abstractions.Tests.Providers;
+namespace Synaxis.Shared.Kernel.Application.Tests.Providers;
 
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Synaxis.Abstractions.Providers;
+using Synaxis.Shared.Kernel.Application.Providers;
 
 [Trait("Category", "Unit")]
 public class EmbeddingProviderTests

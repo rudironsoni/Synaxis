@@ -4,7 +4,7 @@
 
 namespace Synaxis.Providers.Models
 {
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Represents a streaming chat response chunk.

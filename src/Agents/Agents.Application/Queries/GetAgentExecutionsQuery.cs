@@ -1,3 +1,4 @@
+using Synaxis.Shared.Contracts;
 // <copyright file="GetAgentExecutionsQuery.cs" company="Synaxis">
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
@@ -5,8 +6,8 @@
 namespace Synaxis.Agents.Application.Queries;
 
 using Mediator;
-using Synaxis.Contracts.V2.DTOs;
-using Synaxis.Contracts.V2.Queries;
+using Synaxis.Shared.Contracts.V2.DTOs;
+using Synaxis.Shared.Contracts.V2.Queries;
 
 /// <summary>
 /// Query to get executions for an agent with optional filtering and pagination.

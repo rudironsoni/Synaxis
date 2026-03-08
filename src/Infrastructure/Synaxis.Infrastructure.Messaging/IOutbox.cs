@@ -2,12 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Messaging;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Defines a contract for storing and retrieving outbox messages.

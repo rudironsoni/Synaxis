@@ -1,7 +1,7 @@
-namespace Synaxis.Contracts.Tests.V1.Messages;
+namespace Synaxis.Shared.Contracts.Tests.V1.Messages;
 
 using FluentAssertions;
-using Synaxis.Contracts.V1.Messages;
+using Synaxis.Shared.Contracts.V1.Messages;
 
 [Trait("Category", "Unit")]
 public class ImageDataTests

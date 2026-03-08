@@ -5,7 +5,7 @@
 namespace Synaxis.TestUtilities.Assertions;
 
 using FluentAssertions;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 using Synaxis.TestUtilities.Aggregates;
 
 /// <summary>

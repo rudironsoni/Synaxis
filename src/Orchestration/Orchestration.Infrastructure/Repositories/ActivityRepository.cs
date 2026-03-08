@@ -2,11 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Orchestration.Infrastructure.Repositories;
-
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Orchestration.Domain.Aggregates;
+
+using Synaxis.Shared.Kernel.Application.Cloud;
+
+namespace Synaxis.Orchestration.Infrastructure.Repositories;
 
 /// <summary>
 /// Implementation of activity repository using event sourcing.

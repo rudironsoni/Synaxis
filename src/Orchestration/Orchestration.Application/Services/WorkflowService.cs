@@ -2,11 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Orchestration.Application.Services;
-
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Orchestration.Domain.Aggregates;
+
+using Synaxis.Shared.Kernel.Application.Cloud;
+
+namespace Synaxis.Orchestration.Application.Services;
 
 /// <summary>
 /// Implementation of workflow service.

@@ -5,8 +5,8 @@
 namespace Synaxis.Application.Services.Audit;
 
 using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
 
 /// <summary>
 /// Application-level service for logging audit events.

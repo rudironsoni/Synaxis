@@ -7,7 +7,7 @@ namespace Synaxis.Providers.GCP;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Stub implementation for future GCP MessageBus integration using Pub/Sub.

@@ -24,7 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
     <ProjectReference Include="../../src/Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
-    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Infrastructure/Synaxis.Shared.Kernel.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

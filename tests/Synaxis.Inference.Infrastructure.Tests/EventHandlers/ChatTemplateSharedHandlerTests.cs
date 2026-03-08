@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.Core.Contracts;
+using Synaxis.Shared.Kernel.Domain.Contracts;
 using Synaxis.Inference.Domain.Events;
 using Synaxis.Inference.Infrastructure.EventHandlers;
 using Xunit;

@@ -6,7 +6,7 @@ namespace Synaxis.Providers.OpenAI.DependencyInjection
 {
     using System;
     using Microsoft.Extensions.DependencyInjection;
-    using Synaxis.Abstractions.Providers;
+    using Synaxis.Shared.Kernel.Application.Providers;
     using Synaxis.Providers.OpenAI.Configuration;
 
     /// <summary>

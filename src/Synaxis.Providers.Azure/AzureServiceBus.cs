@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using global::Polly;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Azure Service Bus implementation of IMessageBus using MassTransit.

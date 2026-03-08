@@ -7,7 +7,7 @@ namespace Synaxis.Providers
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Providers.Models;
 
     /// <summary>

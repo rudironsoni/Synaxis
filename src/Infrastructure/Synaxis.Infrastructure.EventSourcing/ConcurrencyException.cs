@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.EventSourcing;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Exception thrown when an optimistic concurrency conflict is detected during event persistence.

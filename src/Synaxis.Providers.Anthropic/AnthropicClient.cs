@@ -15,8 +15,8 @@ namespace Synaxis.Providers.Anthropic
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Options;
-    using Synaxis.Contracts.V1.Errors;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Errors;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Providers.Anthropic.Configuration;
 
     /// <summary>

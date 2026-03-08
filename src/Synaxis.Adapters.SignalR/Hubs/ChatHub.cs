@@ -13,7 +13,7 @@ namespace Synaxis.Adapters.SignalR.Hubs
     using Microsoft.AspNetCore.SignalR;
     using Synaxis.Adapters.SignalR.Connection;
     using Synaxis.Commands.Chat;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// SignalR hub for chat completion operations.

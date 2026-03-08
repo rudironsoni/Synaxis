@@ -4,7 +4,7 @@
 
 namespace Synaxis.Identity.UnitTests.Aggregates;
 
-using Synaxis.Abstractions.Time;
+using Synaxis.Shared.Kernel.Application.Time;
 using Synaxis.Common.Tests.Time;
 using Synaxis.Identity.Domain.Aggregates;
 using Synaxis.Identity.Domain.ValueObjects;

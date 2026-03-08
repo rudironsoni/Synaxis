@@ -10,9 +10,9 @@ namespace Synaxis.Tests.Handlers.Embeddings
     using FluentAssertions;
     using Microsoft.Extensions.Logging;
     using NSubstitute;
-    using Synaxis.Abstractions.Routing;
+    using Synaxis.Shared.Kernel.Application.Routing;
     using Synaxis.Commands.Embeddings;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Handlers.Embeddings;
     using Xunit;
 

@@ -2,14 +2,15 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Agents.Domain.Aggregates;
-
-using System;
-using System.Collections.Generic;
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Agents.Domain.Events;
 using Synaxis.Agents.Domain.ValueObjects;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+
+using System.Collections.Generic;
+using System;
+
+namespace Synaxis.Agents.Domain.Aggregates;
 
 /// <summary>
 /// Aggregate root representing an agent configuration.

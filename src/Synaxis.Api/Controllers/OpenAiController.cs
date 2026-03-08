@@ -15,7 +15,7 @@ namespace Synaxis.Api.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
     using Synaxis.Api.DTOs.OpenAi;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Providers;
     using Synaxis.Providers.Models;
 
@@ -418,7 +418,7 @@ namespace Synaxis.Api.Controllers
             return new ChatRequest
             {
                 Model = request.Model,
-                Messages = request.Messages.Select(m => new Synaxis.Contracts.V1.Messages.ChatMessage
+                Messages = request.Messages.Select(m => new Synaxis.Shared.Contracts.V1.Messages.ChatMessage
                 {
                     Role = m.Role,
                     Content = m.Content,
@@ -493,7 +493,7 @@ namespace Synaxis.Api.Controllers
                 Model = request.Model,
                 Messages = new[]
                 {
-                    new Synaxis.Contracts.V1.Messages.ChatMessage
+                    new Synaxis.Shared.Contracts.V1.Messages.ChatMessage
                     {
                         Role = "user",
                         Content = promptText,
@@ -563,7 +563,7 @@ namespace Synaxis.Api.Controllers
             };
         }
 
-        private Synaxis.Api.DTOs.OpenAi.EmbeddingResponse ConvertToOpenAiEmbeddingResponse(Synaxis.Contracts.V1.Messages.EmbeddingResponse response, string model)
+        private Synaxis.Api.DTOs.OpenAi.EmbeddingResponse ConvertToOpenAiEmbeddingResponse(Synaxis.Shared.Contracts.V1.Messages.EmbeddingResponse response, string model)
         {
             return new Synaxis.Api.DTOs.OpenAi.EmbeddingResponse
             {

@@ -2,12 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Encryption;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
 
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Implements envelope encryption using AES-256-GCM.

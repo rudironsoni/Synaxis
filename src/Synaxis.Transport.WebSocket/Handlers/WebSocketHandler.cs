@@ -14,9 +14,9 @@ namespace Synaxis.Transport.WebSocket.Handlers
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
     using Synaxis.Commands.Chat;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Transport.WebSocket.Protocol;
 
     /// <summary>

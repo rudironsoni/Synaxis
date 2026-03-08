@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests;
 
 using System;
 using System.Linq;
@@ -12,10 +12,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Abstractions.Time;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Application.Time;
 using Synaxis.Common.Tests.Time;
-using Synaxis.Infrastructure.Messaging;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 using Xunit;
 
 /// <summary>
@@ -75,7 +75,7 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
 
         // Assert
         messages.Should().HaveCount(1);
-        messages[0].EventType.Should().Be("Synaxis.Infrastructure.IntegrationTests.TestEvent");
+        messages[0].EventType.Should().Be("Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.TestEvent");
         messages[0].ProcessedAt.Should().BeNull();
     }
 
@@ -221,8 +221,8 @@ public sealed class OutboxIntegrationTests : IClassFixture<PostgreSqlTestFixture
 
         // Assert
         messages.Should().HaveCount(2);
-        messages.Select(m => m.EventType).Should().Contain("Synaxis.Infrastructure.IntegrationTests.TestEvent");
-        messages.Select(m => m.EventType).Should().Contain("Synaxis.Infrastructure.IntegrationTests.AnotherTestEvent");
+        messages.Select(m => m.EventType).Should().Contain("Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.TestEvent");
+        messages.Select(m => m.EventType).Should().Contain("Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.AnotherTestEvent");
     }
 
     [Fact]

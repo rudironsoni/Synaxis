@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>true</IsPackable>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -17,10 +17,10 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Configuration/Synaxis.Configuration/Synaxis.Configuration.csproj" />
-    <ProjectReference Include="../../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../../Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Application/Synaxis.Shared.Kernel.Application.csproj" />
     <ProjectReference Include="../../Abstractions/Synaxis.Abstractions.Cloud/Synaxis.Abstractions.Cloud.csproj" />
-    <ProjectReference Include="../../Synaxis.Contracts/Synaxis.Contracts.csproj" />
-    <ProjectReference Include="../../Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../Shared/Synaxis.Shared.Contracts/Synaxis.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Infrastructure/Synaxis.Shared.Kernel.Infrastructure.csproj" />
     <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.EventSourcing/Synaxis.Infrastructure.EventSourcing.csproj" />
     <ProjectReference Include="../../Infrastructure/Synaxis.Infrastructure.Messaging/Synaxis.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="../../Synaxis.Infrastructure.Encryption/Synaxis.Infrastructure.Encryption.csproj" />

@@ -2,9 +2,9 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.EventSourcing;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// A snapshot strategy that never creates snapshots.

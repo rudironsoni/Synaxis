@@ -2,12 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests.Audit;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.Audit;
 
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Synaxis.Infrastructure.Services.Audit;
+using Synaxis.Shared.Kernel.Infrastructure.Services.Audit;
 using Xunit;
 
 /// <summary>

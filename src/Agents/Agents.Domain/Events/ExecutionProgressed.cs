@@ -2,11 +2,12 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Agents.Domain.Events;
-
 using Mediator;
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Agents.Domain.ValueObjects;
+
+using Synaxis.Shared.Kernel.Application.Cloud;
+
+namespace Synaxis.Agents.Domain.Events;
 
 /// <summary>
 /// Event raised when an agent execution progresses to a new step.

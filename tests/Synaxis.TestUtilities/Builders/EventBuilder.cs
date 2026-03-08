@@ -5,7 +5,7 @@
 namespace Synaxis.TestUtilities.Builders;
 
 using System.Globalization;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Builder for creating domain events in tests.

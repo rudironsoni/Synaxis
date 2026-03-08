@@ -10,7 +10,7 @@ namespace Synaxis.Tests.Execution
     using FluentAssertions;
     using Mediator;
     using NSubstitute;
-    using Synaxis.Abstractions.Commands;
+    using Synaxis.Shared.Kernel.Application.Commands;
     using Synaxis.Execution;
     using Xunit;
 
@@ -145,7 +145,7 @@ namespace Synaxis.Tests.Execution
             result.Value.Should().Be("Test Result");
         }
 
-        public sealed record TestCommand : Synaxis.Abstractions.Commands.ICommand<TestResult>, global::Mediator.IRequest<TestResult>;
+        public sealed record TestCommand : Synaxis.Shared.Kernel.Application.Commands.ICommand<TestResult>, global::Mediator.IRequest<TestResult>;
 
         public sealed record TestResult
         {

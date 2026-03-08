@@ -12,7 +12,7 @@ using Mediator;
 using Microsoft.Extensions.Logging;
 using Synaxis.Agents.Application.Interfaces;
 using Synaxis.Agents.Domain.Events;
-using Synaxis.Core.Contracts;
+using Synaxis.Shared.Kernel.Domain.Contracts;
 
 /// <summary>
 /// Handles execution started events.

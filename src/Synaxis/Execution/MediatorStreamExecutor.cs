@@ -8,7 +8,7 @@ namespace Synaxis.Execution
     using System.Collections.Generic;
     using System.Threading;
     using Mediator;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
 
     /// <summary>
     /// Stream executor implementation that delegates to Mediator.
@@ -16,7 +16,7 @@ namespace Synaxis.Execution
     /// <typeparam name="TRequest">The type of request to execute.</typeparam>
     /// <typeparam name="TResult">The type of result produced by the stream.</typeparam>
     public sealed class MediatorStreamExecutor<TRequest, TResult> : IStreamExecutor<TRequest, TResult>
-        where TRequest : Abstractions.Commands.IStreamRequest<TResult>
+        where TRequest : Synaxis.Shared.Kernel.Application.Commands.IStreamRequest<TResult>
     {
         private readonly IMediator _mediator;
 

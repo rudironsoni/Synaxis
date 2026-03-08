@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Migrations;
+namespace Synaxis.Shared.Kernel.Infrastructure.Tests.Migrations;
 
 using System;
 using System.IO;

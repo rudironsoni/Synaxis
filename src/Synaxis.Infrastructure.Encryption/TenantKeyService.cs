@@ -2,14 +2,14 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Encryption;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
 
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Manages tenant encryption keys with support for multiple keys per tenant/user/provider.

@@ -10,8 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mediator;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Core.Contracts;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Domain.Contracts;
 using Synaxis.Inference.Domain.Events;
 
 /// <summary>

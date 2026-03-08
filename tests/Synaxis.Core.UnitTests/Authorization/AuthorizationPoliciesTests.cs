@@ -1,4 +1,4 @@
-namespace Synaxis.Core.Authorization.Tests;
+namespace Synaxis.Shared.Kernel.Domain.Authorization.Tests;
 
 using FluentAssertions;
 using Xunit;

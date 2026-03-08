@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using Synaxis.Agents.Domain.Events;
-using Synaxis.Core.Contracts;
+using Synaxis.Shared.Kernel.Domain.Contracts;
 
 /// <summary>
 /// Handles execution paused events.

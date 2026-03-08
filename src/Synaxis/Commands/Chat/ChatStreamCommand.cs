@@ -5,8 +5,8 @@
 namespace Synaxis.Commands.Chat
 {
     using Mediator;
-    using Synaxis.Contracts.V1.Commands;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Commands;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Represents a streaming chat completion command.

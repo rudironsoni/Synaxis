@@ -9,8 +9,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Primitives;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Extension methods for fluent assertions on domain events and aggregates.

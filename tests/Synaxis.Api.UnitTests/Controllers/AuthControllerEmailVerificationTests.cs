@@ -17,10 +17,10 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Synaxis.Api.Controllers;
 using Synaxis.Api.DTOs.Authentication;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Services;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.Services;
 using Xunit;
 
 /// <summary>

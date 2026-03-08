@@ -8,12 +8,12 @@ namespace Synaxis.DependencyInjection
     using Mediator;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
-    using Synaxis.Abstractions.Execution;
-    using Synaxis.Abstractions.Routing;
+    using Synaxis.Shared.Kernel.Application.Execution;
+    using Synaxis.Shared.Kernel.Application.Routing;
     using Synaxis.Behaviors;
     using Synaxis.Commands.Chat;
     using Synaxis.Commands.Embeddings;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Execution;
     using Synaxis.Handlers.Chat;
     using Synaxis.Handlers.Embeddings;

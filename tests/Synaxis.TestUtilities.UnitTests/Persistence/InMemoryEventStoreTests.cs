@@ -5,7 +5,7 @@
 namespace Synaxis.TestUtilities.Tests.Persistence;
 
 using FluentAssertions;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.TestUtilities.Persistence;
 using Xunit;
 
@@ -391,7 +391,7 @@ public class InMemoryEventStoreTests
     /// <summary>
     /// Test domain event implementation.
     /// </summary>
-    private sealed class TestDomainEvent : Synaxis.Infrastructure.EventSourcing.DomainEvent
+    private sealed class TestDomainEvent : Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing.DomainEvent
     {
         public TestDomainEvent(string aggregateId)
         {

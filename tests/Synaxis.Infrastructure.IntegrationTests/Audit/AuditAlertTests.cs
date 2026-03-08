@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests.Audit;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.Audit;
 
 using System;
 using System.Collections.Generic;
@@ -12,8 +12,8 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.EventHandlers.Audit;
+using Synaxis.Shared.Kernel.Domain.Models;
+using Synaxis.Shared.Kernel.Infrastructure.EventHandlers.Audit;
 using Xunit;
 
 /// <summary>

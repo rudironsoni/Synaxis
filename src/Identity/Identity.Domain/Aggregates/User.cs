@@ -2,13 +2,14 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Identity.Domain.Aggregates;
-
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Abstractions.Time;
 using Synaxis.Identity.Domain.Events;
 using Synaxis.Identity.Domain.ValueObjects;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Application.Time;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+
+
+namespace Synaxis.Identity.Domain.Aggregates;
 
 /// <summary>
 /// Represents a user aggregate in the Identity bounded context.

@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
 
-namespace Synaxis.Contracts.Tests;
+namespace Synaxis.Shared.Contracts.Tests;
 
 using Xunit;
 
@@ -14,7 +14,7 @@ public class SchemaGeneratorTests
     [Fact]
     public void GenerateSchema_ForUserDto_ShouldReturnValidSchema()
     {
-        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V1.DTOs.UserDto>();
+        var schema = _generator.GenerateSchema<global::Synaxis.Shared.Contracts.V1.DTOs.UserDto>();
 
         schema.Should().NotBeNullOrEmpty();
 
@@ -27,7 +27,7 @@ public class SchemaGeneratorTests
     [Fact]
     public void GenerateSchema_ForCreateUserCommand_ShouldReturnValidSchema()
     {
-        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V1.Commands.CreateUserCommand>();
+        var schema = _generator.GenerateSchema<global::Synaxis.Shared.Contracts.V1.Commands.CreateUserCommand>();
 
         schema.Should().NotBeNullOrEmpty();
 
@@ -38,7 +38,7 @@ public class SchemaGeneratorTests
     [Fact]
     public void GenerateSchema_ForUserCreatedEvent_ShouldReturnValidSchema()
     {
-        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V1.DomainEvents.UserCreated>();
+        var schema = _generator.GenerateSchema<global::Synaxis.Shared.Contracts.V1.DomainEvents.UserCreated>();
 
         schema.Should().NotBeNullOrEmpty();
 
@@ -50,7 +50,7 @@ public class SchemaGeneratorTests
     public void GenerateSchema_ForPaginatedResult_ShouldReturnValidSchema()
     {
         // Use concrete PaginatedResult<UserDto> which is defined in the assembly
-        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V1.DTOs.PaginatedResult<global::Synaxis.Contracts.V1.DTOs.UserDto>>();
+        var schema = _generator.GenerateSchema<global::Synaxis.Shared.Contracts.V1.DTOs.PaginatedResult<global::Synaxis.Shared.Contracts.V1.DTOs.UserDto>>();
 
         schema.Should().NotBeNullOrEmpty();
 
@@ -61,7 +61,7 @@ public class SchemaGeneratorTests
     [Fact]
     public void GenerateSchema_ForV2UserDto_ShouldReturnValidSchema()
     {
-        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V2.DTOs.UserDto>();
+        var schema = _generator.GenerateSchema<global::Synaxis.Shared.Contracts.V2.DTOs.UserDto>();
 
         schema.Should().NotBeNullOrEmpty();
 
@@ -136,7 +136,7 @@ public class SchemaGeneratorTests
     [Fact]
     public void GenerateSchema_ForEnum_ShouldReturnValidSchema()
     {
-        var schema = _generator.GenerateSchema<global::Synaxis.Contracts.V1.Common.UserStatus>();
+        var schema = _generator.GenerateSchema<global::Synaxis.Shared.Contracts.V1.Common.UserStatus>();
 
         schema.Should().NotBeNullOrEmpty();
 

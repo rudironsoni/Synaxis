@@ -4,7 +4,7 @@
 
 namespace Synaxis.Common.Tests.Time;
 
-using Synaxis.Abstractions.Time;
+using Synaxis.Shared.Kernel.Application.Time;
 
 /// <summary>
 /// Test implementation that allows manual time manipulation.

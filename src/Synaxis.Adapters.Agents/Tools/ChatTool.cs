@@ -9,9 +9,9 @@ namespace Synaxis.Adapters.Agents.Tools
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Abstractions.Execution;
-    using Synaxis.Contracts.V1.Commands;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Kernel.Application.Execution;
+    using Synaxis.Shared.Contracts.V1.Commands;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Exposes Synaxis chat functionality as a tool for function calling.

@@ -32,7 +32,7 @@ public class AgentConfigurationsControllerTests : IClassFixture<AgentsWebApplica
         this._output = output;
 
         // Debug: Verify event store type
-        var eventStore = factory.Services.GetService(typeof(Synaxis.Abstractions.Cloud.IEventStore));
+        var eventStore = factory.Services.GetService(typeof(Synaxis.Shared.Kernel.Application.Cloud.IEventStore));
         this._output.WriteLine($"EventStore type: {eventStore?.GetType().FullName ?? "null"}");
     }
 
@@ -65,7 +65,7 @@ public class AgentConfigurationsControllerTests : IClassFixture<AgentsWebApplica
         // Clear event store before test
         using (var scope = this._factory.Services.CreateScope())
         {
-            var testEventStore = scope.ServiceProvider.GetRequiredService<Synaxis.Abstractions.Cloud.IEventStore>() as TestEventStore;
+            var testEventStore = scope.ServiceProvider.GetRequiredService<Synaxis.Shared.Kernel.Application.Cloud.IEventStore>() as TestEventStore;
             testEventStore?.Clear();
         }
 
@@ -76,7 +76,7 @@ public class AgentConfigurationsControllerTests : IClassFixture<AgentsWebApplica
         this._output.WriteLine($"Created agent with ID: {createdAgent!.Id}");
 
         // Debug: Check event store contents
-        var eventStore = this._factory.Services.GetRequiredService<Synaxis.Abstractions.Cloud.IEventStore>();
+        var eventStore = this._factory.Services.GetRequiredService<Synaxis.Shared.Kernel.Application.Cloud.IEventStore>();
         var streamId = createdAgent.Id.ToString();
         var events = await eventStore.ReadStreamAsync(streamId);
         this._output.WriteLine($"Event store has {events.Count} events for stream {streamId}");

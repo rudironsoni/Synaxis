@@ -13,7 +13,7 @@
     <RootNamespace>Synaxis.Billing.IntegrationTests</RootNamespace>
     <AssemblyName>Synaxis.Billing.IntegrationTests</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Migrations;
+namespace Synaxis.Shared.Kernel.Infrastructure.Tests.Migrations;
 
 using System;
 using System.Threading.Tasks;
@@ -10,8 +10,8 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Synaxis.Common.Tests.Fixtures;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Domain.Models;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
 using Xunit;
 
 /// <summary>

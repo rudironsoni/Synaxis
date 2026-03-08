@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-using Synaxis.Contracts.V1.Messages;
+using Synaxis.Shared.Contracts.V1.Messages;
 
 namespace Synaxis.Samples.Microservices;
 

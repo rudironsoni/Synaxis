@@ -2,11 +2,11 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.EventSourcing;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Provides JSON serialization and deserialization for domain events with type information.

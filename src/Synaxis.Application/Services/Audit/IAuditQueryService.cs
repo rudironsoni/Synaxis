@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Synaxis.Core.Models;
+using Synaxis.Shared.Kernel.Domain.Models;
 
 /// <summary>
 /// Service for querying audit logs with pagination and filtering.

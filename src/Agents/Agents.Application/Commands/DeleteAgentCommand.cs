@@ -4,6 +4,8 @@
 
 namespace Synaxis.Agents.Application.Commands;
 
+using Synaxis.Shared.Contracts;
+
 using Mediator;
 
 /// <summary>

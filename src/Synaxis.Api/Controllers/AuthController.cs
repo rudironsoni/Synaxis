@@ -14,9 +14,9 @@ namespace Synaxis.Api.Controllers
     using Microsoft.Extensions.Logging;
     using Synaxis.Api.DTOs.Authentication;
     
-    using Synaxis.Core.Models;
-    using Synaxis.Core.Contracts;
-    using MfaEnableResult = Synaxis.Core.Contracts.MfaEnableResult;
+    using Synaxis.Shared.Kernel.Domain.Models;
+    using Synaxis.Shared.Kernel.Domain.Contracts;
+    using MfaEnableResult = Synaxis.Shared.Kernel.Domain.Contracts.MfaEnableResult;
 
     /// <summary>
     /// Controller for authentication endpoints.
@@ -28,7 +28,7 @@ namespace Synaxis.Api.Controllers
         private readonly IAuthenticationService _authenticationService;
         private readonly IUserService _userService;
         private readonly ILogger<AuthController> _logger;
-        private readonly Synaxis.Infrastructure.Data.SynaxisDbContext _dbContext;
+        private readonly Synaxis.Shared.Kernel.Infrastructure.Data.SynaxisDbContext _dbContext;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
@@ -42,7 +42,7 @@ namespace Synaxis.Api.Controllers
             IAuthenticationService authenticationService,
             IUserService userService,
             ILogger<AuthController> logger,
-            Synaxis.Infrastructure.Data.SynaxisDbContext dbContext)
+            Synaxis.Shared.Kernel.Infrastructure.Data.SynaxisDbContext dbContext)
         {
             ArgumentNullException.ThrowIfNull(authenticationService);
             ArgumentNullException.ThrowIfNull(userService);
@@ -163,7 +163,7 @@ namespace Synaxis.Api.Controllers
                 var verificationToken = Guid.NewGuid().ToString();
                 var verificationUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/verify-email?token={verificationToken}";
 
-                var tokenEntity = new Core.Models.EmailVerificationToken
+                var tokenEntity = new Shared.Kernel.Domain.Models.EmailVerificationToken
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -610,7 +610,7 @@ namespace Synaxis.Api.Controllers
                     return this.Unauthorized(new { message = "Invalid user" });
                 }
 
-                var updateUserRequest = new Core.Contracts.UpdateUserRequest
+                var updateUserRequest = new Shared.Kernel.Domain.Contracts.UpdateUserRequest
                 {
                     FirstName = request.FirstName,
                     LastName = request.LastName,
@@ -640,7 +640,7 @@ namespace Synaxis.Api.Controllers
             }
         }
 
-        private UserDto MapToUserDto(Core.Models.User user)
+        private UserDto MapToUserDto(Shared.Kernel.Domain.Models.User user)
         {
             return new UserDto
             {
@@ -731,12 +731,12 @@ namespace Synaxis.Api.Controllers
             await this._dbContext.SaveChangesAsync();
         }
 
-        private async Task SendNewVerificationEmailAsync(Core.Models.User user)
+        private async Task SendNewVerificationEmailAsync(Shared.Kernel.Domain.Models.User user)
         {
             var verificationToken = Guid.NewGuid().ToString();
             var verificationUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/verify-email?token={verificationToken}";
 
-            var tokenEntity = new Core.Models.EmailVerificationToken
+            var tokenEntity = new Shared.Kernel.Domain.Models.EmailVerificationToken
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
@@ -770,7 +770,7 @@ namespace Synaxis.Api.Controllers
             return null;
         }
 
-        private ActionResult CheckUserForPasswordReset(Core.Models.User user)
+        private ActionResult CheckUserForPasswordReset(Shared.Kernel.Domain.Models.User user)
         {
             if (user == null)
             {
@@ -787,14 +787,14 @@ namespace Synaxis.Api.Controllers
             return null;
         }
 
-        private async Task ProcessPasswordResetRequestAsync(Core.Models.User user)
+        private async Task ProcessPasswordResetRequestAsync(Shared.Kernel.Domain.Models.User user)
         {
             await this.InvalidateExistingPasswordResetTokensAsync(user.Id);
 
             var resetToken = Guid.NewGuid().ToString();
             var resetUrl = $"{this.Request.Scheme}://{this.Request.Host}/api/auth/reset-password?token={resetToken}";
 
-            var tokenEntity = new Core.Models.PasswordResetToken
+            var tokenEntity = new Shared.Kernel.Domain.Models.PasswordResetToken
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
@@ -822,7 +822,7 @@ namespace Synaxis.Api.Controllers
             return null;
         }
 
-        private ActionResult ValidatePasswordResetToken(Core.Models.PasswordResetToken resetToken)
+        private ActionResult ValidatePasswordResetToken(Shared.Kernel.Domain.Models.PasswordResetToken resetToken)
         {
             if (resetToken == null)
             {
@@ -851,7 +851,7 @@ namespace Synaxis.Api.Controllers
             return null;
         }
 
-        private async Task ProcessPasswordResetAsync(Core.Models.PasswordResetToken resetToken, string newPassword)
+        private async Task ProcessPasswordResetAsync(Shared.Kernel.Domain.Models.PasswordResetToken resetToken, string newPassword)
         {
             resetToken.User.PasswordHash = this._userService.HashPassword(newPassword);
             resetToken.User.PasswordChangedAt = DateTime.UtcNow;

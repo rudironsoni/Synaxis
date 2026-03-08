@@ -11,7 +11,7 @@ namespace Synaxis.Api.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Core.Contracts;
+    using Synaxis.Shared.Kernel.Domain.Contracts;
 
     /// <summary>
     /// Super Admin controller for cross-region visibility and management

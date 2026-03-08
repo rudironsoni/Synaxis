@@ -8,7 +8,7 @@ namespace Synaxis.Adapters.Agents.State
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Manages conversation state and history for Bot Framework conversations.

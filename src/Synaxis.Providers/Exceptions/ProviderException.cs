@@ -5,7 +5,7 @@
 namespace Synaxis.Providers.Exceptions
 {
     using System;
-    using Synaxis.Contracts.V1.Errors;
+    using Synaxis.Shared.Contracts.V1.Errors;
 
     /// <summary>
     /// Exception thrown when a provider operation fails.

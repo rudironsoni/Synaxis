@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Encryption;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Encryption;
 
 /// <summary>
 /// Represents encrypted data with all necessary components for decryption.

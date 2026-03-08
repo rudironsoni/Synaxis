@@ -10,7 +10,7 @@ namespace Synaxis.Transport.Http.Filters
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Filters;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Contracts.V1.Errors;
+    using Synaxis.Shared.Contracts.V1.Errors;
 
     /// <summary>
     /// Global exception filter that converts exceptions to proper HTTP responses with SynaxisError body.

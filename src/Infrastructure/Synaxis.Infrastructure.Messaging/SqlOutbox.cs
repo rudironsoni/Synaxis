@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Messaging;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 
 using System;
 using System.Collections.Generic;
@@ -12,8 +12,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Abstractions.Time;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Application.Time;
 
 /// <summary>
 /// SQL Server implementation of the outbox pattern using Entity Framework Core.

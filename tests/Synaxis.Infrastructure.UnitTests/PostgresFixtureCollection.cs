@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests;
+namespace Synaxis.Shared.Kernel.Infrastructure.Tests;
 
 using Xunit;
 

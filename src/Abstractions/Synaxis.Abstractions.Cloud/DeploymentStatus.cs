@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Abstractions.Cloud;
+namespace Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Represents the status of a deployment.

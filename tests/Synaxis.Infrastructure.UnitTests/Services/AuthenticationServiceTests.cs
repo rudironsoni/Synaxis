@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Services;
+namespace Synaxis.Shared.Kernel.Infrastructure.Tests.Services;
 
 using System;
 using System.Threading.Tasks;
@@ -11,10 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Services;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.Services;
 using Xunit;
 
 /// <summary>

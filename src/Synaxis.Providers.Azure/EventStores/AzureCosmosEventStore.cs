@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using global::Polly;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Azure Cosmos DB implementation of IEventStore.

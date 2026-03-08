@@ -8,7 +8,7 @@ namespace Synaxis.Routing
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Abstractions.Routing;
+    using Synaxis.Shared.Kernel.Application.Routing;
 
     /// <summary>
     /// Default implementation of provider selection logic.

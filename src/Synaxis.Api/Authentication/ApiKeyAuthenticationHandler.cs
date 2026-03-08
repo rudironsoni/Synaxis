@@ -12,7 +12,7 @@ namespace Synaxis.Api.Authentication
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
-    using Synaxis.Core.Contracts;
+    using Synaxis.Shared.Kernel.Domain.Contracts;
 
     /// <summary>
     /// Authentication handler for API key authentication.

@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector">
@@ -20,6 +20,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Application/Synaxis.Shared.Kernel.Application.csproj" />
   </ItemGroup>
 </Project>

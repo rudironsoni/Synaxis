@@ -25,8 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Synaxis.Core/Synaxis.Core.csproj" />
-    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Domain/Synaxis.Shared.Kernel.Domain.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Infrastructure/Synaxis.Shared.Kernel.Infrastructure.csproj" />
     <ProjectReference Include="../Common/Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 

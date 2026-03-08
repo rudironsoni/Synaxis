@@ -31,8 +31,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
-    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Application/Synaxis.Shared.Kernel.Application.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Infrastructure/Synaxis.Shared.Kernel.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

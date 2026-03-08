@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests.Audit;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests.Audit;
 
 using System;
 using System.Collections.Generic;
@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Repositories;
-using Synaxis.Infrastructure.Services.Audit;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.Repositories;
+using Synaxis.Shared.Kernel.Infrastructure.Services.Audit;
 using Xunit;
 
 /// <summary>

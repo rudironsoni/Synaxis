@@ -1,7 +1,7 @@
-namespace Synaxis.Abstractions.Tests.Commands;
+namespace Synaxis.Shared.Kernel.Application.Tests.Commands;
 
 using FluentAssertions;
-using Synaxis.Abstractions.Commands;
+using Synaxis.Shared.Kernel.Application.Commands;
 using Xunit;
 
 [Trait("Category", "Unit")]

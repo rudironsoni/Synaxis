@@ -5,7 +5,7 @@
 namespace Billing.Domain.Aggregates.UsageTracking.Events;
 
 using MediatR;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Domain event raised when a new usage tracking aggregate is created.

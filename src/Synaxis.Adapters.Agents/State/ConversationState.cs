@@ -5,7 +5,7 @@
 namespace Synaxis.Adapters.Agents.State
 {
     using System.Collections.Generic;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Represents the state of a conversation.

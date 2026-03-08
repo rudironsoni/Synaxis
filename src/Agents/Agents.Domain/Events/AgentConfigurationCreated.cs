@@ -6,7 +6,7 @@ namespace Synaxis.Agents.Domain.Events;
 
 using System;
 using Mediator;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Event raised when a new agent configuration is created.

@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Tests.Migrations;
+namespace Synaxis.Shared.Kernel.Infrastructure.Tests.Migrations;
 
 using System;
 using System.Diagnostics;
@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Synaxis.Common.Tests.Fixtures;
-using Synaxis.Infrastructure.Data;
-using Synaxis.Infrastructure.Migrations.Rehearsals;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.Migrations.Rehearsals;
 using Xunit;
 
 /// <summary>

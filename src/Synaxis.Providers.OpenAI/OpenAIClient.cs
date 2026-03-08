@@ -15,7 +15,7 @@ namespace Synaxis.Providers.OpenAI
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
-    using Synaxis.Contracts.V1.Errors;
+    using Synaxis.Shared.Contracts.V1.Errors;
     using Synaxis.Providers.OpenAI.Configuration;
     using Synaxis.Providers.OpenAI.Models;
 

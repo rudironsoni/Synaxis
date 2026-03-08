@@ -6,8 +6,8 @@ namespace Billing.Domain.Aggregates.UsageTracking;
 
 using Billing.Domain.Aggregates.UsageTracking.Events;
 using Billing.Domain.Aggregates.UsageTracking.ValueObjects;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Aggregate root for tracking usage of resources within an organization.

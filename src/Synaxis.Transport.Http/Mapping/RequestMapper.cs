@@ -6,8 +6,8 @@ namespace Synaxis.Transport.Http.Mapping
 {
     using System;
     using System.Text.Json;
-    using Synaxis.Contracts.V1.Commands;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Commands;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Maps HTTP request JSON payloads to Synaxis command records.

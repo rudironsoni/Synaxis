@@ -2,12 +2,13 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Orchestration.Infrastructure.Repositories;
-
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Orchestration.Domain;
 using Synaxis.Orchestration.Domain.Aggregates;
+
+using Synaxis.Orchestration.Domain;
+using Synaxis.Shared.Kernel.Application.Cloud;
+
+namespace Synaxis.Orchestration.Infrastructure.Repositories;
 
 /// <summary>
 /// Implementation of saga repository using event sourcing.

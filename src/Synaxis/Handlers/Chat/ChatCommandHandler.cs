@@ -9,10 +9,10 @@ namespace Synaxis.Handlers.Chat
     using System.Threading.Tasks;
     using Mediator;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Abstractions.Providers;
-    using Synaxis.Abstractions.Routing;
+    using Synaxis.Shared.Kernel.Application.Providers;
+    using Synaxis.Shared.Kernel.Application.Routing;
     using Synaxis.Commands.Chat;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Handles chat completion commands by routing to the appropriate provider.

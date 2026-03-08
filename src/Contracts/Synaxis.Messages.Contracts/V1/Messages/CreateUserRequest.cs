@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Contracts.V1.Messages;
+namespace Synaxis.Shared.Contracts.V1.Messages;
 
 /// <summary>
 /// Request contract for creating a new user in version 1 of the contracts.

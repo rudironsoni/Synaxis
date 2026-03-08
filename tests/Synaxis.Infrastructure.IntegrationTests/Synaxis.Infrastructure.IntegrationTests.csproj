@@ -46,7 +46,7 @@
     <ProjectReference Include="../../src/Synaxis.Infrastructure.Encryption/Synaxis.Infrastructure.Encryption.csproj" />
     <ProjectReference Include="../../src/Infrastructure/Synaxis.Infrastructure.Messaging/Synaxis.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="../../src/Synaxis.Providers.Azure/Synaxis.Providers.Azure.csproj" />
-    <ProjectReference Include="../../src/Synaxis.Infrastructure/Synaxis.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Infrastructure/Synaxis.Shared.Kernel.Infrastructure.csproj" />
     <ProjectReference Include="../Common/Synaxis.Common.Tests.csproj" />
   </ItemGroup>
 

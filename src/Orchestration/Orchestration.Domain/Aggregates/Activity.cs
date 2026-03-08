@@ -2,10 +2,11 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Orchestration.Domain.Aggregates;
-
-using Synaxis.Infrastructure.EventSourcing;
 using Synaxis.Orchestration.Domain.Events;
+
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+
+namespace Synaxis.Orchestration.Domain.Aggregates;
 
 /// <summary>
 /// Aggregate root representing a standalone activity execution.

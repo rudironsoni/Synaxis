@@ -4,7 +4,7 @@
 
 namespace Synaxis.Identity.Domain.Events;
 
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Event raised when a user is updated.

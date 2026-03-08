@@ -4,8 +4,8 @@
 
 namespace Synaxis.TestUtilities.Builders;
 
-using Synaxis.Abstractions.Cloud;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
 
 /// <summary>
 /// Test aggregate for AutoFixture test data generation.

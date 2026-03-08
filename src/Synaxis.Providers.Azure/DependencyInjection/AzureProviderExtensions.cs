@@ -6,7 +6,7 @@ namespace Synaxis.Providers.Azure.DependencyInjection
 {
     using System;
     using Microsoft.Extensions.DependencyInjection;
-    using Synaxis.Abstractions.Providers;
+    using Synaxis.Shared.Kernel.Application.Providers;
     using Synaxis.Providers.Azure.Configuration;
 
     /// <summary>

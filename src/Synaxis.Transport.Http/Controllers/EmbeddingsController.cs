@@ -11,7 +11,7 @@ namespace Synaxis.Transport.Http.Controllers
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Transport.Http.Mapping;
 
     /// <summary>

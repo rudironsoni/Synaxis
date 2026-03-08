@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Synaxis.Infrastructure.ApiManagement.Abstractions;
-using Synaxis.Infrastructure.ApiManagement.Configuration;
-using Synaxis.Infrastructure.ApiManagement.Models;
+using Synaxis.Shared.Kernel.Infrastructure.ApiManagement.Abstractions;
+using Synaxis.Shared.Kernel.Infrastructure.ApiManagement.Configuration;
+using Synaxis.Shared.Kernel.Infrastructure.ApiManagement.Models;
 
 /// <summary>
 /// Middleware for validating API keys against external API Management platform.

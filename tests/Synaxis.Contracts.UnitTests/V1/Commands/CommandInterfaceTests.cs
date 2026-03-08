@@ -1,8 +1,8 @@
-namespace Synaxis.Contracts.Tests.V1.Commands;
+namespace Synaxis.Shared.Contracts.Tests.V1.Commands;
 
 using FluentAssertions;
-using Synaxis.Abstractions.Commands;
-using Synaxis.Contracts.V1.Commands;
+using Synaxis.Shared.Kernel.Application.Commands;
+using Synaxis.Shared.Contracts.V1.Commands;
 
 [Trait("Category", "Unit")]
 public class CommandInterfaceTests

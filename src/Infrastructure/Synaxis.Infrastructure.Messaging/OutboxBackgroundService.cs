@@ -2,7 +2,7 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.Messaging;
+namespace Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.Messaging;
 
 using System;
 using System.Threading;

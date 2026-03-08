@@ -1,7 +1,7 @@
-namespace Synaxis.Contracts.Tests.V1.Auth;
+namespace Synaxis.Shared.Contracts.Tests.V1.Auth;
 
 using FluentAssertions;
-using Synaxis.Contracts.V1.Auth;
+using Synaxis.Shared.Contracts.V1.Auth;
 
 [Trait("Category", "Unit")]
 public class AuthContextTests

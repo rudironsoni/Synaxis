@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Polly;
-using Synaxis.Infrastructure.Data;
+using Synaxis.Shared.Kernel.Infrastructure.Data;
 using Testcontainers.PostgreSql;
 using Xunit;
 

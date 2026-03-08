@@ -4,7 +4,7 @@
 
 #nullable enable
 
-namespace Synaxis.Abstractions.Tests.Execution;
+namespace Synaxis.Shared.Kernel.Application.Tests.Execution;
 
 using System;
 using System.Collections.Generic;
@@ -13,8 +13,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Synaxis.Abstractions.Commands;
-using Synaxis.Abstractions.Execution;
+using Synaxis.Shared.Kernel.Application.Commands;
+using Synaxis.Shared.Kernel.Application.Execution;
 
 [Trait("Category", "Unit")]
 public class StreamExecutorTests

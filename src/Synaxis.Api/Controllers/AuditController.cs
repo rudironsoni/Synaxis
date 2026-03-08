@@ -13,8 +13,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Synaxis.Core.Contracts;
-using Synaxis.Infrastructure.Services.Audit;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Infrastructure.Services.Audit;
 
 /// <summary>
 /// Controller for audit log operations.
@@ -68,7 +68,7 @@ public class AuditController : ControllerBase
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A paged result of audit logs.</returns>
     [HttpGet("logs")]
-    [ProducesResponseType(typeof(Core.Models.PagedResult<AuditLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Shared.Kernel.Domain.Models.PagedResult<AuditLogDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

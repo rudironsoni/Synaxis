@@ -10,9 +10,9 @@ namespace Synaxis.Adapters.Mcp.Tools
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
     using Synaxis.Commands.Embeddings;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// MCP tool for generating text embeddings using AI models.

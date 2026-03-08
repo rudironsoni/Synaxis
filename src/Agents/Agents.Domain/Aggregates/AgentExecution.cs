@@ -2,12 +2,13 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Agents.Domain.Aggregates;
-
-using Synaxis.Abstractions.Cloud;
 using Synaxis.Agents.Domain.Events;
 using Synaxis.Agents.Domain.ValueObjects;
-using Synaxis.Infrastructure.EventSourcing;
+using Synaxis.Shared.Kernel.Application.Cloud;
+using Synaxis.Shared.Kernel.Shared.Kernel.Infrastructure.EventSourcing;
+
+
+namespace Synaxis.Agents.Domain.Aggregates;
 
 /// <summary>
 /// Aggregate root representing an agent execution.

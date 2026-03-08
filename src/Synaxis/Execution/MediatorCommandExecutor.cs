@@ -8,7 +8,7 @@ namespace Synaxis.Execution
     using System.Threading;
     using System.Threading.Tasks;
     using Mediator;
-    using Synaxis.Abstractions.Execution;
+    using Synaxis.Shared.Kernel.Application.Execution;
 
     /// <summary>
     /// Command executor implementation that delegates to Mediator.
@@ -16,7 +16,7 @@ namespace Synaxis.Execution
     /// <typeparam name="TCommand">The type of command to execute.</typeparam>
     /// <typeparam name="TResult">The type of result produced by the command.</typeparam>
     public sealed class MediatorCommandExecutor<TCommand, TResult> : ICommandExecutor<TCommand, TResult>
-        where TCommand : Abstractions.Commands.ICommand<TResult>
+        where TCommand : Synaxis.Shared.Kernel.Application.Commands.ICommand<TResult>
     {
         private readonly IMediator _mediator;
 

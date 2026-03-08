@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Synaxis.Core/Synaxis.Core.csproj" />
+    <ProjectReference Include="../Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Domain/Synaxis.Shared.Kernel.Domain.csproj" />
   </ItemGroup>
 
 </Project>

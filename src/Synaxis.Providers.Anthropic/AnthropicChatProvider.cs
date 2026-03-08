@@ -9,8 +9,8 @@ namespace Synaxis.Providers.Anthropic
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Abstractions.Providers;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Kernel.Application.Providers;
+    using Synaxis.Shared.Contracts.V1.Messages;
 
     /// <summary>
     /// Implements the chat provider interface for Anthropic's Claude API.

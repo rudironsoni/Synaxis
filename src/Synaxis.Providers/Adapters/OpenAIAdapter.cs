@@ -17,8 +17,8 @@ namespace Synaxis.Providers.Adapters
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
-    using Synaxis.Contracts.V1.Errors;
-    using Synaxis.Contracts.V1.Messages;
+    using Synaxis.Shared.Contracts.V1.Errors;
+    using Synaxis.Shared.Contracts.V1.Messages;
     using Synaxis.Providers.Configuration;
     using Synaxis.Providers.Exceptions;
     using Synaxis.Providers.Models;

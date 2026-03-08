@@ -14,7 +14,7 @@ using global::Azure.Security.KeyVault.Keys.Cryptography;
 using global::Azure.Security.KeyVault.Secrets;
 using global::Polly;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Azure Key Vault implementation of IKeyVault.

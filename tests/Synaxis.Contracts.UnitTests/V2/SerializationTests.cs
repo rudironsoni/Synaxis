@@ -1,11 +1,11 @@
 using FluentAssertions;
-using Synaxis.Contracts.V2.Commands;
-using Synaxis.Contracts.V2.Common;
-using Synaxis.Contracts.V2.DomainEvents;
-using Synaxis.Contracts.V2.DTOs;
-using Synaxis.Contracts.V2.Queries;
+using Synaxis.Shared.Contracts.V2.Commands;
+using Synaxis.Shared.Contracts.V2.Common;
+using Synaxis.Shared.Contracts.V2.DomainEvents;
+using Synaxis.Shared.Contracts.V2.DTOs;
+using Synaxis.Shared.Contracts.V2.Queries;
 
-namespace Synaxis.Contracts.Tests.V2;
+namespace Synaxis.Shared.Contracts.Tests.V2;
 
 [Trait("Category", "Unit")]
 public class SerializationTests

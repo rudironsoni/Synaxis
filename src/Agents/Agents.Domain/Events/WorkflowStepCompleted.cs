@@ -5,7 +5,7 @@
 namespace Synaxis.Agents.Domain.Events;
 
 using Mediator;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Event raised when a workflow step is completed.

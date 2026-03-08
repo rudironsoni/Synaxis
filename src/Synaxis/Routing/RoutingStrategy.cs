@@ -4,7 +4,7 @@
 
 namespace Synaxis.Routing
 {
-    using Synaxis.Abstractions.Routing;
+    using Synaxis.Shared.Kernel.Application.Routing;
 
     /// <summary>
     /// Base implementation for routing strategies.

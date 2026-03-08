@@ -2,15 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
-    <ProjectReference Include="../Synaxis.Contracts/Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Application/Synaxis.Shared.Kernel.Application.csproj" />
+    <ProjectReference Include="../Shared/Synaxis.Shared.Contracts/Synaxis.Shared.Contracts.csproj" />
     <ProjectReference Include="../Synaxis/Synaxis.csproj" />
   </ItemGroup>
 

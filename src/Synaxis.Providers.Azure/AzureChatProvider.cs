@@ -8,7 +8,7 @@ namespace Synaxis.Providers.Azure
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Synaxis.Abstractions.Providers;
+    using Synaxis.Shared.Kernel.Application.Providers;
 
     /// <summary>
     /// Azure OpenAI implementation of <see cref="IChatProvider"/>.

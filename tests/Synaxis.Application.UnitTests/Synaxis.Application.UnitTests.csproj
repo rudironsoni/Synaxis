@@ -24,8 +24,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Synaxis/Synaxis.csproj" />
-    <ProjectReference Include="../../src/Synaxis.Abstractions/Synaxis.Abstractions.csproj" />
-    <ProjectReference Include="../../src/Synaxis.Contracts/Synaxis.Contracts.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Kernel/Synaxis.Shared.Kernel.Application/Synaxis.Shared.Kernel.Application.csproj" />
+    <ProjectReference Include="../../src/Shared/Synaxis.Shared.Contracts/Synaxis.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,13 +2,13 @@
 // Copyright (c) Synaxis. All rights reserved.
 // </copyright>
 
-namespace Synaxis.Infrastructure.IntegrationTests;
+namespace Synaxis.Shared.Kernel.Infrastructure.IntegrationTests;
 
 using System.Data;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 using Synaxis.Providers.Azure.EventStores;
 using Xunit;
 

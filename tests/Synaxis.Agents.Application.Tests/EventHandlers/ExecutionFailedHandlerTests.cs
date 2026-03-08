@@ -13,8 +13,8 @@ using Moq;
 using Synaxis.Agents.Application.EventHandlers;
 using Synaxis.Agents.Application.Interfaces;
 using Synaxis.Agents.Domain.Events;
-using Synaxis.Core.Contracts;
-using Synaxis.Core.Models;
+using Synaxis.Shared.Kernel.Domain.Contracts;
+using Synaxis.Shared.Kernel.Domain.Models;
 using Xunit;
 
 /// <summary>

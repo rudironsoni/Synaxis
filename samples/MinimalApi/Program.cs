@@ -1,8 +1,3 @@
-// <copyright file="Program.cs" company="Synaxis">
-// Copyright (c) Synaxis. All rights reserved.
-// </copyright>
-
-using System;
 using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -10,9 +5,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Synaxis.Commands.Chat;
-using Synaxis.Contracts.V1.Messages;
 using Synaxis.DependencyInjection;
 using Synaxis.Providers.OpenAI.DependencyInjection;
+
+using Synaxis.Shared.Contracts.V1.Messages;
+using System;
+
+// <copyright file="Program.cs" company="Synaxis">
+// Copyright (c) Synaxis. All rights reserved.
+// </copyright>
 
 var builder = WebApplication.CreateBuilder(args);
 

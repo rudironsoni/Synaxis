@@ -4,7 +4,7 @@
 
 namespace Synaxis.Orchestration.Domain.Events;
 
-using Synaxis.Abstractions.Cloud;
+using Synaxis.Shared.Kernel.Application.Cloud;
 
 /// <summary>
 /// Event raised when a new background job is created.

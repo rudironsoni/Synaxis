@@ -4,7 +4,7 @@
 
 namespace Synaxis.Application.Services.Audit;
 
-using Synaxis.Core.Contracts;
+using Synaxis.Shared.Kernel.Domain.Contracts;
 
 /// <summary>
 /// Extension methods for validating audit events.

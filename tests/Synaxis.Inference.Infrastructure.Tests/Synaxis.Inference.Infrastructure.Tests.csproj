@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\contexts\Inference\Synaxis.Inference.Infrastructure\Synaxis.Inference.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Inference\Inference.Domain\Inference.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Synaxis.Core\Synaxis.Core.csproj" />
+    <ProjectReference Include="..\..\src\Shared\Synaxis.Shared.Kernel\Synaxis.Shared.Kernel.Domain\Synaxis.Shared.Kernel.Domain.csproj" />
     <ProjectReference Include="..\..\src\Abstractions\Synaxis.Abstractions.Cloud\Synaxis.Abstractions.Cloud.csproj" />
   </ItemGroup>
 
