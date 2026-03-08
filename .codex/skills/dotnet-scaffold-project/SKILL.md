@@ -4,7 +4,7 @@ description: >-
   Creates a new .NET project. Generates solution with CPM, analyzers,
   editorconfig, SourceLink.
 metadata:
-  short-description: .NET skill guidance for foundation tasks
+  short-description: .NET skill guidance for project tasks
 ---
 # dotnet-scaffold-project
 

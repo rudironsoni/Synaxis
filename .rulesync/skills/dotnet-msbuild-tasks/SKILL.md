@@ -1,9 +1,11 @@
 ---
 name: dotnet-msbuild-tasks
+category: developer-experience
+subcategory: msbuild
 description: Writes custom MSBuild tasks. ITask, ToolTask, IIncrementalTask, inline tasks, UsingTask.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

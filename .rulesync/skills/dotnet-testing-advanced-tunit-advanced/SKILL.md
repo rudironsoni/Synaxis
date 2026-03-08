@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-tunit-advanced
+category: testing
+subcategory: frameworks
 description: |
   Complete guide for TUnit advanced applications. Use when using TUnit for data-driven testing, dependency injection, or integration testing. Covers MethodDataSource, ClassDataSource, Matrix Tests, Properties filtering. Includes Retry/Timeout control, WebApplicationFactory integration, Testcontainers multi-service orchestration.
   Keywords: TUnit advanced, TUnit advanced, MethodDataSource, ClassDataSource, Matrix Tests, MatrixDataSource, MicrosoftDependencyInjectionDataSource, Property, Retry, Timeout, data-driven testing, test filtering, WebApplicationFactory TUnit, multi-container orchestration

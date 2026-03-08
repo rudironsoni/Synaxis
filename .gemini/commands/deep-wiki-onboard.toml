@@ -1,4 +1,4 @@
-description = "Generate audience-specific onboarding guides"
+description = "$1"
 prompt = """
 # /deep-wiki:onboard
 

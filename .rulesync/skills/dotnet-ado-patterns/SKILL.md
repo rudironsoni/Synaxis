@@ -1,9 +1,11 @@
 ---
 name: dotnet-ado-patterns
+category: operations
+subcategory: ci-cd
 description: Composes Azure DevOps YAML pipelines. Templates, variable groups, multi-stage, triggers.
 license: MIT
 targets: ['*']
-tags: ['cicd', 'dotnet', 'skill']
+tags: [cicd, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

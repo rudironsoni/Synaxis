@@ -1,6 +1,18 @@
 ---
-description: 'Inspect .NET package references and compiled assembly metadata through the local runtime'
+name: dotnet-agent-harness-metadata
+description: '$1'
 targets: ['*']
+portability: copilot-gemini
+flattening-risk: low
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Bash']
+copilot:
+  description: 'Show installation metadata'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:metadata

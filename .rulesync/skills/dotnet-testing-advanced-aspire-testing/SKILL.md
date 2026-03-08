@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-aspire-testing
+category: testing
+subcategory: integration
 description: |
   Complete guide for .NET Aspire Testing integration testing framework. Use when testing .NET Aspire distributed applications, configuring AppHost tests, or migrating from Testcontainers to Aspire testing. Covers DistributedApplicationTestingBuilder, container lifecycle management, multi-service orchestration, Respawn configuration, and time testability design.
   Keywords: aspire testing, .NET Aspire, DistributedApplicationTestingBuilder, AppHost testing, distributed testing, AspireAppFixture, IAsyncLifetime, ContainerLifetime.Session, cloud-native testing, multi-service integration, Aspire.Hosting.Testing, Respawn

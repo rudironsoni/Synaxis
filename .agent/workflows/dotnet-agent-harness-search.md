@@ -1,7 +1,5 @@
 ---
-description: >-
-  Search the toolkit catalog through the local runtime. Filter by kind,
-  category, platform, and limit.
+description: $1
 trigger: /dotnet-agent-harness-search
 turbo: true
 ---

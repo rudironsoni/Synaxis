@@ -1,4 +1,4 @@
-description = "Bootstrap dotnet-agent-harness as a local .NET tool, write RuleSync config, and initialize target-specific agent outputs."
+description = "Bootstrap dotnet-agent-harness as a local .NET tool, write RuleSync config, and initialize target-specific agent outputs"
 prompt = """
 # /dotnet-agent-harness:bootstrap
 

@@ -1,4 +1,4 @@
-description = "Generate complete wiki with pages and onboarding"
+description = "$1"
 prompt = """
 # /deep-wiki:generate
 

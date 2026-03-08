@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-testcontainers-database
+category: testing
+subcategory: integration
 description: |
   Specialized skill for containerized database testing using Testcontainers. Use when testing real database behavior, using SQL Server/PostgreSQL/MySQL containers, testing EF Core/Dapper. Covers container startup, database migrations, test isolation, container sharing.
   Keywords: testcontainers, container testing, database testing, MsSqlContainer, PostgreSqlContainer, MySqlContainer, EF Core testing, Dapper testing, Testcontainers.MsSql, Testcontainers.PostgreSql, GetConnectionString, IAsyncLifetime, CollectionFixture

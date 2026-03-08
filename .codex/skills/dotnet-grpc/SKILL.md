@@ -4,7 +4,7 @@ description: >-
   Builds gRPC services. Proto definition, code-gen, ASP.NET Core host,
   streaming, auth.
 metadata:
-  short-description: .NET skill guidance for api tasks
+  short-description: .NET skill guidance for grpc tasks
 ---
 # dotnet-grpc
 

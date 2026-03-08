@@ -1,9 +1,11 @@
 ---
 name: wiki-changelog
+category: developer-experience
+subcategory: cli
 description: Generates structured changelog from git commits
 license: MIT
 targets: ['claudecode', 'codexcli']
-tags: ['wiki', 'changelog', 'git']
+tags: [wiki, changelog, git]
 version: '1.0.0'
 author: 'microsoft'
 invocable: true

@@ -1,6 +1,18 @@
 ---
-description: 'Search the toolkit catalog through the local runtime. Filter by kind, category, platform, and limit.'
+name: dotnet-agent-harness-search
+description: '$1'
 targets: ['*']
+portability: claude-opencode
+flattening-risk: medium
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Grep', 'Glob', 'Bash']
+copilot:
+  description: 'Search skills by keyword'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:search

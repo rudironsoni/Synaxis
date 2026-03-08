@@ -1,5 +1,5 @@
 ---
-description: Compare two toolkit catalog items through the local runtime.
+description: Compare skills across AI agent systems
 ---
 # /dotnet-agent-harness:compare
 

@@ -1,9 +1,11 @@
 ---
 name: dotnet-multi-targeting
+category: developer-experience
+subcategory: project
 description: Targets multiple TFMs via polyfills and conditional compilation. PolySharp, API compat.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

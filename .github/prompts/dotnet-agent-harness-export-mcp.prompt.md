@@ -1,5 +1,5 @@
 ---
-description: Export MCP-friendly prompt and resource packages from RuleSync source content.
+description: Export skills to MCP format
 ---
 # /dotnet-agent-harness:export-mcp
 

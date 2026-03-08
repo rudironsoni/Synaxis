@@ -2,7 +2,7 @@
 name: dotnet-efcore-patterns
 description: 'EF Core, DbContext, AsNoTracking, query splitting.'
 metadata:
-  short-description: .NET skill guidance for architecture tasks
+  short-description: .NET skill guidance for data tasks
 ---
 # dotnet-efcore-patterns
 

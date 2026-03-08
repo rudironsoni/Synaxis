@@ -1,5 +1,7 @@
 ---
 name: agentic-eval
+category: developer-experience
+subcategory: cli
 location: file:///.rulesync/skills/agentic-eval/SKILL.md
 description: >-
   Patterns and techniques for evaluating and improving AI agent outputs.

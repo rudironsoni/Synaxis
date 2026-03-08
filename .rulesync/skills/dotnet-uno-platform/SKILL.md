@@ -1,9 +1,11 @@
 ---
 name: dotnet-uno-platform
+category: ui-frameworks
+subcategory: uno
 description: Builds Uno Platform cross-platform apps. Extensions, MVUX, Toolkit controls, Hot Reload.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

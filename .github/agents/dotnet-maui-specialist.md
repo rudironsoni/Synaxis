@@ -56,6 +56,27 @@ Always load these skills before analysis:
    - [skill:dotnet-ui-chooser] for framework selection decision tree when user is evaluating alternatives (soft
      dependency -- skill may not exist yet)
 
+## Decision Tree
+
+```text
+Target platforms?
+  Mobile only -> Focus on iOS/Android optimizations
+  Desktop only -> Windows, macOS specific considerations
+  All platforms -> Shared code maximum, platform specifics minimal
+
+UI complexity?
+  Native controls -> Use platform handlers, custom renderers sparingly
+  Custom UI -> GraphicsView, SkiaSharp for custom drawing
+
+Device features needed?
+  Sensors/Camera -> Check platform permissions, abstraction APIs
+  Background tasks -> Platform-specific implementations required
+
+Performance requirements?
+  High -> Native AOT compilation, trimming enabled, compiled bindings
+  Standard -> Focus on startup time, memory management
+```
+
 ## Trigger Lexicon
 
 This agent activates on MAUI-related queries including: "maui", "maui app", "maui xaml", "maui native aot", "maui ios",

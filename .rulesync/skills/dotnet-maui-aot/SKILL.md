@@ -1,9 +1,11 @@
 ---
 name: dotnet-maui-aot
+category: ui-frameworks
+subcategory: maui
 description: Optimizes MAUI for iOS/Catalyst. Native AOT pipeline, size/startup gains, library gaps, trimming.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

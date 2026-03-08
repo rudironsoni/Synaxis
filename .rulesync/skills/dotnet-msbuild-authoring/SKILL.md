@@ -1,9 +1,11 @@
 ---
 name: dotnet-msbuild-authoring
+category: developer-experience
+subcategory: msbuild
 description: Authors MSBuild targets, props, conditions, incremental builds, and Directory.Build patterns.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

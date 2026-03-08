@@ -1,9 +1,11 @@
 ---
 name: dotnet-project-structure
+category: developer-experience
+subcategory: project
 description: Sets up .NET solution layout. .slnx, Directory.Build.props, CPM, .editorconfig, analyzers.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

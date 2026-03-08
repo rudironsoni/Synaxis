@@ -1,9 +1,11 @@
 ---
 name: dotnet-add-analyzers
+category: developer-experience
+subcategory: analyzers
 description: Adds analyzer packages to a project. Nullable, trimming, AOT compat analyzers, severity config.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

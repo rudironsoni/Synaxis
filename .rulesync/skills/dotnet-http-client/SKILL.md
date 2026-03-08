@@ -1,9 +1,11 @@
 ---
 name: dotnet-http-client
+category: web
+subcategory: minimal-apis
 description: Consumes HTTP APIs. IHttpClientFactory, typed/named clients, resilience, DelegatingHandlers.
 license: MIT
 targets: ['*']
-tags: ['architecture', 'dotnet', 'skill']
+tags: [architecture, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

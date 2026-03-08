@@ -1,5 +1,5 @@
 ---
-description: Deep research with evidence-based analysis
+description: Deep research with citations
 ---
 # /deep-wiki:research
 

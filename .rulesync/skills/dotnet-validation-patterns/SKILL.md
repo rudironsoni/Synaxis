@@ -1,9 +1,11 @@
 ---
 name: dotnet-validation-patterns
+category: developer-experience
+subcategory: cli
 description: Validates models and IOptions. DataAnnotations, IValidatableObject, IValidateOptions<T>.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

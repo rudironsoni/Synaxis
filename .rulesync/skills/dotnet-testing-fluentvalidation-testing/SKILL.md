@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-fluentvalidation-testing
+category: testing
+subcategory: fundamentals
 description: |
   Specialized skill for testing FluentValidation validators. Use when you need to create tests for Validator classes, validate business rules, or test error messages. Covers complete FluentValidation.TestHelper usage, ShouldHaveValidationErrorFor, async validation, cross-field logic, etc.
   Keywords: validator, validation, fluentvalidation, validation testing, UserValidator, CreateOrderValidator, TestHelper, ShouldHaveValidationErrorFor, ShouldNotHaveValidationErrorFor, TestValidate, TestValidateAsync, testing validators, validating business rules

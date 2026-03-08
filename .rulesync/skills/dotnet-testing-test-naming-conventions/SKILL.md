@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-test-naming-conventions
+category: testing
+subcategory: fundamentals
 description: |
   Test naming conventions and best practices specialized skill. Used when naming test methods, improving test readability, and establishing naming standards. Covers three-part naming method, Chinese naming recommendations, test class naming, etc.
   Keywords: test naming, test naming, naming conventions, naming conventions, three-part naming, three-part naming, method_scenario_expected, method_scenario_expected, how to name tests, test readability, naming best practices, test report, test documentation

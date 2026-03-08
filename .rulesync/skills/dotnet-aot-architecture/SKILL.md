@@ -1,9 +1,11 @@
 ---
 name: dotnet-aot-architecture
+category: performance
+subcategory: aot
 description: Designs AOT-first apps. Source gen over reflection, AOT-safe DI, serialization, factories.
 license: MIT
 targets: ['*']
-tags: ['aot', 'dotnet', 'skill']
+tags: [aot, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

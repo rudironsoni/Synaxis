@@ -1,9 +1,11 @@
 ---
 name: dotnet-project-analysis
+category: developer-experience
+subcategory: project
 description: Analyzes .NET solution layout and build config -- .sln, .csproj, CPM.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

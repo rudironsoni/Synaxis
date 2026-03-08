@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-code-coverage-analysis
+category: testing
+subcategory: fundamentals
 description: |
   Complete guide for code coverage analysis. Use when you need to analyze code coverage, generate coverage reports, or configure CI/CD coverage checks. Covers Coverlet configuration, report generation, metric interpretation, and cyclomatic complexity integration. Includes Fine Code Coverage, VS Code built-in tools, and best practices.
   Keywords: code coverage, coverage analysis, coverage report, Coverlet, Fine Code Coverage, dotnet-coverage, ReportGenerator, line coverage, branch coverage, cyclomatic complexity, runsettings, cobertura

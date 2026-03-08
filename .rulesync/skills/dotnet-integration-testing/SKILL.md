@@ -3,10 +3,21 @@ name: dotnet-integration-testing
 description: Tests with real infrastructure. WebApplicationFactory, Testcontainers, Aspire, fixtures.
 license: MIT
 targets: ['*']
-tags: ['testing', 'dotnet', 'skill']
-version: '0.0.1'
+category: testing
+subcategory: integration
+tags:
+  - testing
+  - dotnet
+  - skill
+  - integration
+  - testcontainers
+version: '1.0.0'
 author: 'dotnet-agent-harness'
 invocable: true
+related_skills:
+  - dotnet-testing-advanced-aspnet-integration-testing
+  - dotnet-testing-advanced-testcontainers-database
+  - dotnet-testing-advanced-aspire-testing
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
 copilot: {}

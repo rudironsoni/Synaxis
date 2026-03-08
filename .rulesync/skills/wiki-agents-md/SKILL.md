@@ -1,9 +1,11 @@
 ---
 name: wiki-agents-md
+category: developer-experience
+subcategory: cli
 description: Generates AGENTS.md files for coding agent context
 license: MIT
 targets: ['claudecode', 'codexcli']
-tags: ['wiki', 'agents', 'documentation']
+tags: [wiki, agents, documentation]
 version: '1.0.0'
 author: 'microsoft'
 invocable: true

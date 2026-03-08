@@ -1,5 +1,5 @@
 ---
-description: Generate structured changelog from git commits
+description: Generate changelog from git commits
 ---
 # /deep-wiki:changelog
 

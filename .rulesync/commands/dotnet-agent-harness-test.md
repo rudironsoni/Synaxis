@@ -1,6 +1,18 @@
 ---
-description: 'Run authored skill test cases through the local runtime.'
+name: dotnet-agent-harness-test
+description: '$1'
 targets: ['*']
+portability: claude-opencode
+flattening-risk: medium
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Grep', 'Bash']
+copilot:
+  description: 'Run skill tests with coverage'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:test

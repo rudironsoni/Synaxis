@@ -1,9 +1,11 @@
 ---
 name: wiki-llms-txt
+category: developer-experience
+subcategory: cli
 description: Generates llms.txt for LLM-friendly project access
 license: MIT
 targets: ['claudecode', 'codexcli']
-tags: ['wiki', 'llm', 'documentation']
+tags: [wiki, llm, documentation]
 version: '1.0.0'
 author: 'microsoft'
 invocable: true

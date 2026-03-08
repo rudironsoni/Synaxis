@@ -1,4 +1,4 @@
-description = "Ask questions about the repository"
+description = "$1"
 prompt = """
 # /deep-wiki:ask
 

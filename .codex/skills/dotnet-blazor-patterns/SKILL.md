@@ -4,7 +4,7 @@ description: >-
   Architects Blazor apps. Hosting models, render modes, routing, streaming,
   prerender.
 metadata:
-  short-description: .NET skill guidance for ui tasks
+  short-description: .NET skill guidance for blazor tasks
 ---
 # dotnet-blazor-patterns
 

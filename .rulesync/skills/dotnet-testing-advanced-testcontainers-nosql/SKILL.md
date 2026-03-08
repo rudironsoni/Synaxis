@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-testcontainers-nosql
+category: testing
+subcategory: integration
 description: |
   Complete guide for Testcontainers NoSQL integration testing. Use when containerized integration testing for MongoDB or Redis. Covers MongoDB document operations, Redis five data structures, Collection Fixture pattern. Includes BSON serialization, index performance testing, data isolation strategy, and container lifecycle management.
   Keywords: testcontainers mongodb, testcontainers redis, mongodb integration test, redis integration test, nosql testing, MongoDbContainer, RedisContainer, IMongoDatabase, IConnectionMultiplexer, BSON serialization, BsonDocument, document model testing, cache testing, Collection Fixture

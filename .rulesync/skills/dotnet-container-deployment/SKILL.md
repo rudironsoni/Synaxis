@@ -1,9 +1,11 @@
 ---
 name: dotnet-container-deployment
+category: operations
+subcategory: deployment
 description: Deploys .NET containers. Kubernetes probes, Docker Compose for local dev, CI/CD integration.
 license: MIT
 targets: ['*']
-tags: ['cicd', 'dotnet', 'skill']
+tags: [cicd, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

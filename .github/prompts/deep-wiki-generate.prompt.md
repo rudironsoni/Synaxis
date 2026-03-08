@@ -1,5 +1,5 @@
 ---
-description: Generate complete wiki with pages and onboarding
+description: Generate comprehensive wiki
 ---
 # /deep-wiki:generate
 

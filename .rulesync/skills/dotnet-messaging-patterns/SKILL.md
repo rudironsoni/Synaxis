@@ -3,7 +3,7 @@ name: dotnet-messaging-patterns
 description: Builds event-driven systems. Pub/sub, competing consumers, DLQ, sagas, delivery guarantees.
 license: MIT
 targets: ['*']
-tags: ['architecture', 'dotnet', 'skill']
+tags: [architecture, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true
@@ -16,6 +16,8 @@ opencode:
 copilot: {}
 geminicli: {}
 antigravity: {}
+category: fundamentals
+subcategory: coding-standards
 ---
 
 # dotnet-messaging-patterns

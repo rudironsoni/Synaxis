@@ -1,9 +1,11 @@
 ---
 name: dotnet-version-upgrade
+category: developer-experience
+subcategory: project
 description: Upgrades .NET to a newer TFM. LTS-to-LTS, staged through STS, preview, upgrade paths.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

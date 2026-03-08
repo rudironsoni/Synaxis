@@ -1,5 +1,5 @@
 ---
-description: Run authored skill test cases through the local runtime.
+description: $1
 trigger: /dotnet-agent-harness-test
 turbo: true
 ---

@@ -3,7 +3,7 @@ name: dotnet-csproj-reading
 description: Reads and modifies SDK-style .csproj files. PropertyGroup, ItemGroup, CPM, props.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true
@@ -16,6 +16,8 @@ opencode:
 copilot: {}
 geminicli: {}
 antigravity: {}
+category: fundamentals
+subcategory: coding-standards
 ---
 
 # dotnet-csproj-reading

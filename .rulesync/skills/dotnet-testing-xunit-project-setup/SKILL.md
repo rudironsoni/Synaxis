@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-xunit-project-setup
+category: testing
+subcategory: fundamentals
 description: |
   xUnit test project creation and setup specialized skill. Used when creating test projects, setting up project structure, configuring NuGet packages, and organizing test folders. Covers csproj setup, package management, project structure, xunit.runner.json configuration, etc.
   Keywords: xunit project, xunit setup, create test project, test project setup, create test project, project structure, project structure, folder structure, xunit package, nuget packages, testing packages, how to create test project, xunit configuration

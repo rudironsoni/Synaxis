@@ -1,5 +1,5 @@
 ---
-description: Generate audience-specific onboarding guides
+description: $1
 ---
 # /deep-wiki:onboard
 

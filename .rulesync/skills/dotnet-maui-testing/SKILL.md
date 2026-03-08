@@ -1,9 +1,11 @@
 ---
 name: dotnet-maui-testing
+category: testing
+subcategory: fundamentals
 description: Tests .NET MAUI apps. Appium device automation, XHarness, platform validation.
 license: MIT
 targets: ['*']
-tags: ['testing', 'dotnet', 'skill']
+tags: [testing, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

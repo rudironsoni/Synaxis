@@ -1,7 +1,5 @@
 ---
-description: >-
-  Compare two saved prepared-message prompt bundles by system, tool, skill, and
-  request sections.
+description: Compare prompt files across systems
 ---
 # /dotnet-agent-harness:compare-prompts
 

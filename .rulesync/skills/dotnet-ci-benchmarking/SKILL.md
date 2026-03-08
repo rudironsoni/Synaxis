@@ -1,9 +1,11 @@
 ---
 name: dotnet-ci-benchmarking
+category: performance
+subcategory: benchmarking
 description: Gates CI on perf regressions. Automated threshold alerts, baseline tracking, trend reports.
 license: MIT
 targets: ['*']
-tags: ['cicd', 'dotnet', 'skill']
+tags: [cicd, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

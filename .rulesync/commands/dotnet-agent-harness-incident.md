@@ -1,6 +1,18 @@
 ---
-description: 'Record a prompt-related incident and attach saved prepared-message evidence for regression tracking.'
+name: dotnet-agent-harness-incident
+description: '$1'
 targets: ['*']
+portability: claude-opencode
+flattening-risk: medium
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Write', 'Bash']
+copilot:
+  description: 'Create incident report'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:incident

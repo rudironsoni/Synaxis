@@ -1,5 +1,7 @@
 ---
 name: ai-prompt-engineering-safety-review
+category: developer-experience
+subcategory: cli
 location: file:///.rulesync/skills/ai-prompt-engineering-safety-review/SKILL.md
 description: >-
   Comprehensive AI prompt engineering safety review and improvement prompt. Analyzes prompts for safety, bias, security

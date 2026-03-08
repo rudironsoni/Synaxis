@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-test-data-builder-pattern
+category: testing
+subcategory: fundamentals
 description: |
   Test Data Builder Pattern complete implementation guide. Used when using builder pattern to create maintainable test data or simplify complex object test preparation. Covers fluent interface, semantic methods, default value design, and Builder composition patterns.
   Keywords: test data builder, builder pattern test, test data builder, object mother, fluent interface, fluent interface, UserBuilder, ProductBuilder, .With(), .Build(), AUser(), test data preparation, complex object creation, semantic testing

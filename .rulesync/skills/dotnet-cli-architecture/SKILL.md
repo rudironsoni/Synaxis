@@ -1,9 +1,11 @@
 ---
 name: dotnet-cli-architecture
+category: developer-experience
+subcategory: cli
 description: Structures CLI app layers. Command/handler/service separation, clig.dev principles, exit codes.
 license: MIT
 targets: ['*']
-tags: ['architecture', 'dotnet', 'skill']
+tags: [architecture, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

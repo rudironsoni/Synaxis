@@ -1,9 +1,11 @@
 ---
 name: dotnet-csharp-configuration
+category: fundamentals
+subcategory: di-and-services
 description: Configures Options pattern, user secrets, and feature flags. IOptions<T>, FeatureManagement.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

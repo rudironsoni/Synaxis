@@ -1,9 +1,11 @@
 ---
 name: dotnet-wpf-modern
+category: ui-frameworks
+subcategory: wpf
 description: Builds WPF on .NET 8+. Host builder, MVVM Toolkit, Fluent theme, performance, modern C# patterns.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

@@ -26,16 +26,6 @@
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp"
     },
-    "mcp-windbg": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/svnscha/mcp-windbg@v0.12.2",
-        "mcp-windbg"
-      ],
-      "env": {}
-    },
     "deepwiki": {
       "type": "http",
       "url": "https://mcp.deepwiki.com/mcp"

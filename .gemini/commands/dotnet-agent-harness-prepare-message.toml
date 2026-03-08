@@ -1,4 +1,4 @@
-description = "Assemble an enriched agent request from repository context, persona rules, recommended skills, and target resolution."
+description = "Assemble an enriched agent request from repository context, persona rules, recommended skills, and target resolution"
 prompt = """
 # /dotnet-agent-harness:prepare-message
 

@@ -1,9 +1,11 @@
 ---
 name: dotnet-modernize
+category: developer-experience
+subcategory: analyzers
 description: Analyzes .NET code for modernization. Outdated TFMs, deprecated packages, superseded patterns.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

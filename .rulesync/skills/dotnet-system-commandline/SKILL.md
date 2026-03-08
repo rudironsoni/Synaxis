@@ -1,9 +1,11 @@
 ---
 name: dotnet-system-commandline
+category: developer-experience
+subcategory: cli
 description: Builds .NET CLI apps with System.CommandLine 2.0. Commands, options, SetAction, parsing, testing.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

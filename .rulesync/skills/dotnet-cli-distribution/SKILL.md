@@ -1,9 +1,11 @@
 ---
 name: dotnet-cli-distribution
+category: operations
+subcategory: ci-cd
 description: Chooses CLI output format. AOT vs framework-dependent, RID matrix, single-file, dotnet tool.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

@@ -1,9 +1,11 @@
 ---
 name: dotnet-domain-modeling
+category: developer-experience
+subcategory: cli
 description: Models business domains. Aggregates, value objects, domain events, rich models, repositories.
 license: MIT
 targets: ['*']
-tags: ['architecture', 'dotnet', 'skill']
+tags: [architecture, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-aspnet-integration-testing
+category: testing
+subcategory: integration
 description: |
   Specialized skill for ASP.NET Core integration testing. Use when testing Web API endpoints, HTTP request/response, middleware, and dependency injection. Covers WebApplicationFactory, TestServer, HttpClient testing, in-memory database configuration.
   Keywords: integration testing, web api testing, WebApplicationFactory, TestServer, HttpClient testing, controller testing, endpoint testing, RESTful API testing, Microsoft.AspNetCore.Mvc.Testing, CreateClient, ConfigureWebHost, AwesomeAssertions.Web, Be200Ok, Be404NotFound, middleware testing, dependency injection testing

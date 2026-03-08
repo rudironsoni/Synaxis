@@ -1,22 +1,17 @@
 ---
 name: dotnet-agent-harness-recommender
-description:
-  'AI-powered skill recommendation engine for dotnet-agent-harness. Analyzes project context and recommends relevant
-  skills based on detected frameworks, packages, and patterns. Triggers on: recommend skill, suggest skills, what skill
-  should I use, skill suggestion, project analysis recommendation.'
+category: developer-experience
+subcategory: cli
+description: 'AI-powered skill recommendation engine for dotnet-agent-harness. Analyzes project context and recommends relevant skills based on detected frameworks, packages, and patterns. Triggers on: recommend skill, suggest skills, what skill should I use, skill suggestion, project analysis recommendation.'
 targets: ['*']
-tags: ['dotnet', 'skill', 'dotnet-agent-harness', 'recommendation', 'analysis']
+tags: [dotnet, skill, dotnet-agent-harness, recommendation, analysis]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 claudecode:
   model: inherit
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash']
 opencode:
-  mode: subagent
-  tools:
-    bash: true
-    edit: false
-    write: false
+  allowed-tools: ['bash', 'Read', 'Grep', 'Glob']
 copilot:
   tools: ['read', 'search', 'execute']
 codexcli:

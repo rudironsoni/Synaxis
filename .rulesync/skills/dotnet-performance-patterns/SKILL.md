@@ -3,10 +3,23 @@ name: dotnet-performance-patterns
 description: Optimizes .NET allocations and throughput. Span, ArrayPool, ref struct, sealed, stackalloc.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
-version: '0.0.1'
+category: performance
+subcategory: patterns
+tags:
+  - performance
+  - dotnet
+  - skill
+  - patterns
+  - span
+  - memory
+version: '1.0.0'
 author: 'dotnet-agent-harness'
 invocable: true
+related_skills:
+  - dotnet-gc-memory
+  - dotnet-benchmarkdotnet
+  - dotnet-csharp-type-design-performance
+  - dotnet-native-aot
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
 codexcli:

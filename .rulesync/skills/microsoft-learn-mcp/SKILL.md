@@ -3,7 +3,7 @@ name: microsoft-learn-mcp
 description: Microsoft Learn MCP Server integration for accessing official Microsoft documentation
 license: MIT
 targets: ['*']
-tags: ['microsoft', 'learn', 'mcp', 'documentation', 'skill']
+tags: [microsoft, learn, mcp, documentation, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true
@@ -16,6 +16,8 @@ codexcli:
 copilot: {}
 geminicli: {}
 antigravity: {}
+category: fundamentals
+subcategory: coding-standards
 ---
 
 # Microsoft Learn MCP

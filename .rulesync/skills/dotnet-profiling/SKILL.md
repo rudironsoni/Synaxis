@@ -1,9 +1,11 @@
 ---
 name: dotnet-profiling
+category: performance
+subcategory: profiling
 description: Diagnoses .NET performance issues. dotnet-counters, dotnet-trace, dotnet-dump, flame graphs.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

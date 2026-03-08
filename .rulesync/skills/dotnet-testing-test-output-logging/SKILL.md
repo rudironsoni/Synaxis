@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-test-output-logging
+category: testing
+subcategory: fundamentals
 description: |
   Complete guide for xUnit test output and logging. Use when you need to implement test output, diagnostic logging, or ILogger alternatives in xUnit tests. Covers ITestOutputHelper injection, AbstractLogger pattern, structured output design. Includes XUnitLogger, CompositeLogger, performance test diagnostic tool implementations.
   Keywords: ITestOutputHelper, ILogger testing, test output xunit, test output, test logging, AbstractLogger, XUnitLogger, CompositeLogger, testOutputHelper.WriteLine, test diagnostics, logger mock, test log, structured output, Received().Log

@@ -1,5 +1,5 @@
 ---
-description: Package wiki as VitePress dark-theme site
+description: Build VitePress wiki site
 ---
 # /deep-wiki:build
 

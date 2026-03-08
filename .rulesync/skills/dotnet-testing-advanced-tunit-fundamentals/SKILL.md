@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-tunit-fundamentals
+category: testing
+subcategory: frameworks
 description: |
   Complete guide for TUnit new-generation testing framework. Use when creating test projects with TUnit or migrating from xUnit to TUnit. Covers Source Generator driven test discovery, AOT compilation support, fluent async assertions. Includes project creation, [Test] attribute, lifecycle management, parallel control, and xUnit syntax comparison.
   Keywords: TUnit, tunit testing, source generator testing, AOT testing, new generation testing framework, [Test], [Arguments], TUnit.Assertions, Assert.That, Before(Test), After(Test), NotInParallel, TUnit.Templates, Microsoft.Testing.Platform, TUnit vs xUnit, parallel execution

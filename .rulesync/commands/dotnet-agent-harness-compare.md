@@ -1,6 +1,18 @@
 ---
-description: 'Compare two toolkit catalog items through the local runtime.'
+name: dotnet-agent-harness-compare
+description: '$1'
 targets: ['*']
+portability: claude-opencode
+flattening-risk: medium
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Grep', 'Glob', 'Bash']
+copilot:
+  description: 'Compare skills across AI agent systems'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:compare

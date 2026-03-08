@@ -1,7 +1,5 @@
 ---
-description: >-
-  Search the toolkit catalog through the local runtime. Filter by kind,
-  category, platform, and limit.
+description: Search skills by keyword
 ---
 # /dotnet-agent-harness:search
 

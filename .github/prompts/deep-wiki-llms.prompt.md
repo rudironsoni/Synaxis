@@ -1,5 +1,5 @@
 ---
-description: Generate llms.txt for LLM-friendly project access
+description: Generate llms.txt file
 ---
 # /deep-wiki:llms
 

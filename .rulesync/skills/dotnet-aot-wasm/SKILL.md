@@ -1,9 +1,11 @@
 ---
 name: dotnet-aot-wasm
+category: performance
+subcategory: aot
 description: Compiles .NET to WebAssembly AOT. Blazor/Uno WASM, size vs speed, lazy loading, Brotli.
 license: MIT
 targets: ['*']
-tags: ['aot', 'dotnet', 'skill']
+tags: [aot, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

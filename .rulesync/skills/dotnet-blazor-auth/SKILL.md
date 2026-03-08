@@ -1,9 +1,11 @@
 ---
 name: dotnet-blazor-auth
+category: web
+subcategory: blazor
 description: Implements Blazor auth flows -- login/logout, AuthorizeView, Identity UI, OIDC.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

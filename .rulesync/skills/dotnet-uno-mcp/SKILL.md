@@ -1,9 +1,11 @@
 ---
 name: dotnet-uno-mcp
+category: ui-frameworks
+subcategory: uno
 description: Queries Uno MCP server. Tool detection, search-then-fetch workflow, init rules, fallback.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

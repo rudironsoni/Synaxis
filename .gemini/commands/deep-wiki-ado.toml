@@ -1,4 +1,4 @@
-description = "Generate Node.js script to convert wiki to Azure DevOps Wiki format"
+description = "$1"
 prompt = """
 # /deep-wiki:ado
 

@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing
+category: testing
+subcategory: fundamentals
 description: |
   .NET testing fundamentals overview and navigation center. Triggered when users ask about "how to write .NET tests", ".NET testing getting started", "required testing tools", "testing best practices", "learn testing from scratch", and other general testing needs. Recommends appropriate sub-skills based on specific requirements, covering testing fundamentals, test data, assertions, mocking, special scenarios, and other 19 fundamental skills.
   Keywords: dotnet testing, .NET testing, testing getting started, how to write tests, testing best practices, unit test, unit test, xunit, 3A pattern, FIRST principle, assertion, assertion, mock, stub, NSubstitute, test data, AutoFixture, Bogus, validator, FluentValidation, TimeProvider, IFileSystem, code coverage, ITestOutputHelper, test naming

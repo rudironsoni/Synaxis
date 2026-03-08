@@ -3,10 +3,21 @@ name: dotnet-csharp-dependency-injection
 description: Registers and resolves services with MS DI. Keyed services, scopes, decoration, lifetimes.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
-version: '0.0.1'
+category: fundamentals
+subcategory: di-and-services
+tags:
+  - csharp
+  - dotnet
+  - skill
+  - dependency-injection
+  - di
+version: '1.0.0'
 author: 'dotnet-agent-harness'
 invocable: true
+related_skills:
+  - dotnet-csharp-configuration
+  - dotnet-validation-patterns
+  - dotnet-architecture-patterns
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
 codexcli:

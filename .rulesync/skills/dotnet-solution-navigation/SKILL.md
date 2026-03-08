@@ -1,9 +1,11 @@
 ---
 name: dotnet-solution-navigation
+category: developer-experience
+subcategory: project
 description: Orients in .NET solutions -- entry points, .sln/.slnx, dependency graphs, config.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

@@ -1,9 +1,11 @@
 ---
 name: dotnet-csharp-source-generators
+category: fundamentals
+subcategory: coding-standards
 description: Creates Roslyn source generators. IIncrementalGenerator, GeneratedRegex, LoggerMessage, STJ.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

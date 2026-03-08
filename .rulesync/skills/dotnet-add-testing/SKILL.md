@@ -1,9 +1,11 @@
 ---
 name: dotnet-add-testing
+category: testing
+subcategory: fundamentals
 description: Adds test infrastructure to a .NET project. Scaffolds xUnit project, coverlet, layout.
 license: MIT
 targets: ['*']
-tags: ['testing', 'dotnet', 'skill']
+tags: [testing, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

@@ -5,6 +5,11 @@ description: >-
   project context and recommends relevant skills based on detected frameworks,
   packages, and patterns. Triggers on: recommend skill, suggest skills, what
   skill should I use, skill suggestion, project analysis recommendation.
+allowed-tools:
+  - bash
+  - Read
+  - Grep
+  - Glob
 ---
 # dotnet-agent-harness-recommender
 

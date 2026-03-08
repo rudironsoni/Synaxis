@@ -1,5 +1,5 @@
 ---
-description: Export MCP-friendly prompt and resource packages from RuleSync source content.
+description: $1
 ---
 # /dotnet-agent-harness:export-mcp
 

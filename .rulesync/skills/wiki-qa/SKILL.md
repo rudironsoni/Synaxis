@@ -1,9 +1,11 @@
 ---
 name: wiki-qa
+category: developer-experience
+subcategory: cli
 description: Answers questions about the repository
 license: MIT
 targets: ['claudecode', 'codexcli']
-tags: ['wiki', 'qa', 'documentation']
+tags: [wiki, qa, documentation]
 version: '1.0.0'
 author: 'microsoft'
 invocable: true

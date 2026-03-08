@@ -1,7 +1,7 @@
 ---
 description: >-
   Assemble an enriched agent request from repository context, persona rules,
-  recommended skills, and target resolution.
+  recommended skills, and target resolution
 ---
 # /dotnet-agent-harness:prepare-message
 

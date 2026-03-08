@@ -1,9 +1,11 @@
 ---
 name: dotnet-playwright
+category: developer-experience
+subcategory: cli
 description: Automates browser tests in .NET. Playwright E2E, CI browser caching, trace viewer, codegen.
 license: MIT
 targets: ['*']
-tags: ['testing', 'dotnet', 'skill']
+tags: [testing, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

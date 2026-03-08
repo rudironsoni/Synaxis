@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-advanced-webapi-integration-testing
+category: testing
+subcategory: integration
 description: |
   Complete guide for ASP.NET Core Web API integration testing. Use when performing integration testing on Web API endpoints or validating ProblemDetails error format. Covers WebApplicationFactory, IExceptionHandler, Testcontainers multi-container orchestration, Flurl URL construction, and AwesomeAssertions HTTP validation.
   Keywords: webapi integration testing, WebApplicationFactory, asp.net core integration test, webapi integration test, IExceptionHandler, ProblemDetails, ValidationProblemDetails, AwesomeAssertions, Flurl, Respawn, Be201Created, Be400BadRequest, multi-container testing, Collection Fixture, global exception handling

@@ -1,7 +1,5 @@
 ---
-description: >-
-  Recommend platform-compatible skills, subagents, and commands through the
-  local runtime.
+description: Recommend skills for project
 ---
 # /dotnet-agent-harness:recommend
 

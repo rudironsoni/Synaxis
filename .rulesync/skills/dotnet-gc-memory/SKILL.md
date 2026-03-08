@@ -1,9 +1,11 @@
 ---
 name: dotnet-gc-memory
+category: performance
+subcategory: memory
 description: Tunes GC and memory. GC modes, LOH/POH, Gen0/1/2, Span/Memory deep patterns, ArrayPool.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

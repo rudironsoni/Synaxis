@@ -1,7 +1,5 @@
 ---
-description: >-
-  Inspect .NET package references and compiled assembly metadata through the
-  local runtime
+description: $1
 trigger: /dotnet-agent-harness-metadata
 turbo: true
 ---

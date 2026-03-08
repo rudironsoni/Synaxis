@@ -1,9 +1,11 @@
 ---
 name: dotnet-file-based-apps
+category: developer-experience
+subcategory: cli
 description: Builds .NET 10 file-based C# apps. Directives, CLI commands, csproj migration.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

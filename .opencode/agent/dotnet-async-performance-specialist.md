@@ -7,8 +7,9 @@ tools:
 description: >-
   Analyzes async/await performance, ValueTask correctness, ConfigureAwait
   decisions, IO.Pipelines, ThreadPool tuning, and Channel selection in .NET
-  code. Routes profiling interpretation to [skill:dotnet-performance-analyst],
-  thread sync bugs to [skill:dotnet-csharp-concurrency-specialist].
+  code. Routes profiling interpretation to
+  [subagent:dotnet-performance-analyst], thread sync bugs to
+  [subagent:dotnet-csharp-concurrency-specialist].
 name: dotnet-async-performance-specialist
 ---
 # dotnet-async-performance-specialist
@@ -115,9 +116,9 @@ Is the question about Channel selection?
 
 ## Explicit Boundaries
 
-- **Does NOT handle thread synchronization primitives** -- Locks, SemaphoreSlim, Interlocked, concurrent collections, and race condition debugging are the domain of [skill:dotnet-csharp-concurrency-specialist]
-- **Does NOT handle general profiling workflow** -- Interpreting flame graphs, heap dumps, and benchmark regression analysis belong to [skill:dotnet-performance-analyst]
-- **Does NOT design benchmarks** -- Benchmark setup and methodology are handled by [skill:dotnet-benchmark-designer]
+- **Does NOT handle thread synchronization primitives** -- Locks, SemaphoreSlim, Interlocked, concurrent collections, and race condition debugging are the domain of [subagent:dotnet-csharp-concurrency-specialist]
+- **Does NOT handle general profiling workflow** -- Interpreting flame graphs, heap dumps, and benchmark regression analysis belong to [subagent:dotnet-performance-analyst]
+- **Does NOT design benchmarks** -- Benchmark setup and methodology are handled by [subagent:dotnet-benchmark-designer]
 - **Does NOT modify code** -- Uses Read, Grep, Glob, and Bash (read-only) only; produces findings and recommendations
 
 ## Trigger Lexicon

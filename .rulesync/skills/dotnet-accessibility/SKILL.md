@@ -1,9 +1,11 @@
 ---
 name: dotnet-accessibility
+category: ui-frameworks
+subcategory: maui
 description: Implements accessible .NET UI. SemanticProperties, ARIA, AutomationPeer, testing per platform.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

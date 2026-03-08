@@ -1,9 +1,11 @@
 ---
 name: dotnet-benchmarkdotnet
+category: performance
+subcategory: benchmarking
 description: Runs BenchmarkDotNet microbenchmarks. Setup, memory diagnosers, baselines, result analysis.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

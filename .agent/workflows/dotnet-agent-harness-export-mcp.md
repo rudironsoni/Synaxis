@@ -1,5 +1,5 @@
 ---
-description: Export MCP-friendly prompt and resource packages from RuleSync source content.
+description: $1
 trigger: /dotnet-agent-harness-export-mcp
 turbo: true
 ---

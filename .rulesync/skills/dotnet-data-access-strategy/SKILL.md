@@ -1,9 +1,11 @@
 ---
 name: dotnet-data-access-strategy
+category: data
+subcategory: data-access
 description: Chooses a data access approach. EF Core vs Dapper vs ADO.NET decision matrix, tradeoffs.
 license: MIT
 targets: ['*']
-tags: ['architecture', 'dotnet', 'skill']
+tags: [architecture, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

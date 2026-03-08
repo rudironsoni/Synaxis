@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-bogus-fake-data
+category: testing
+subcategory: test-data
 description: |
   Using Bogus to generate realistic fake data specialized skill. Used when generating realistic names, addresses, phone numbers, emails, company info and other test data. Covers Faker class, multi-language support, custom rules, bulk data generation, etc.
   Keywords: bogus, faker, fake data, fake data, realistic data, realistic data, fake name, fake address, fake email, Faker<T>, RuleFor, Generate, faker.Name, faker.Address, faker.Internet, generate fake data, generate fake data, seed data

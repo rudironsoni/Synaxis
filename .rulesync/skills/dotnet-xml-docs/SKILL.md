@@ -1,9 +1,11 @@
 ---
 name: dotnet-xml-docs
+category: developer-experience
+subcategory: docs
 description: Writes XML doc comments. Tags, inheritdoc, GenerateDocumentationFile, warning suppression.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

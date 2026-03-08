@@ -1,9 +1,11 @@
 ---
 name: dotnet-native-interop
+category: developer-experience
+subcategory: cli
 description: Calls native libraries via P/Invoke. LibraryImport, marshalling, cross-platform resolution.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

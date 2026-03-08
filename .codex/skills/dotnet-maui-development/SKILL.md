@@ -4,7 +4,7 @@ description: >-
   Builds .NET MAUI mobile apps. Project structure, XAML/MVVM, platform services,
   caveats.
 metadata:
-  short-description: .NET skill guidance for ui tasks
+  short-description: .NET skill guidance for maui tasks
 ---
 # dotnet-maui-development
 

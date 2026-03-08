@@ -3,10 +3,22 @@ name: dotnet-native-aot
 description: Publishes Native AOT binaries. PublishAot, ILLink descriptors, P/Invoke, size optimization.
 license: MIT
 targets: ['*']
-tags: ['aot', 'dotnet', 'skill']
-version: '0.0.1'
+category: performance
+subcategory: aot
+tags:
+  - performance
+  - dotnet
+  - skill
+  - aot
+  - native
+version: '1.0.0'
 author: 'dotnet-agent-harness'
 invocable: true
+related_skills:
+  - dotnet-aot-architecture
+  - dotnet-trimming
+  - dotnet-multi-targeting
+  - dotnet-aot-wasm
 claudecode:
   allowed-tools: ['Read', 'Grep', 'Glob', 'Bash', 'Write', 'Edit']
 codexcli:

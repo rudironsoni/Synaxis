@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-autofixture-basics
+category: testing
+subcategory: test-data
 description: |
   Using AutoFixture to automatically generate test data basic skill. Used when quickly generating test objects, reducing boilerplate code, and implementing anonymous testing. Covers Fixture.Create, CreateMany, circular reference handling, and xUnit integration.
   Keywords: autofixture, fixture, auto-generate test data, test data generation, anonymous testing, anonymous testing, fixture.Create, CreateMany, fixture.Build, Create<T>, AutoFixture.Xunit2, OmitOnRecursionBehavior, IFixture, generate test data, generate test data

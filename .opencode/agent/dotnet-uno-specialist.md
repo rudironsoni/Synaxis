@@ -60,6 +60,27 @@ Always load these skills before analysis:
      dependency -- skill may not exist yet)
    - [skill:dotnet-serialization] for serialization patterns beyond Uno Extensions.Serialization configuration
 
+## Decision Tree
+
+```text
+Target platforms?
+  Web only -> WASM with AOT for performance
+  Desktop only -> WinUI, macOS, Linux Skia
+  All platforms -> Shared project structure, platform heads
+
+Existing UWP/WinUI code?
+  YES -> Migration path, API compatibility checks
+  NO -> Greenfield development with Uno best practices
+
+MVVM pattern?
+  YES -> CommunityToolkit.Mvvm, MVUX for reactive
+  NO -> Code-behind acceptable for simple scenarios
+
+Third-party libraries?
+  Windows-only -> Check Uno compatibility or find alternatives
+  Cross-platform -> Prefer Uno-compatible packages
+```
+
 ## Trigger Lexicon
 
 This agent activates on Uno Platform-related queries including: "uno platform", "uno app", "uno wasm", "uno mobile",

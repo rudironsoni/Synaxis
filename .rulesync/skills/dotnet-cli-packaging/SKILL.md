@@ -1,9 +1,11 @@
 ---
 name: dotnet-cli-packaging
+category: operations
+subcategory: release
 description: Publishes to package managers. Homebrew, apt/deb, winget, Scoop, Chocolatey manifests.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

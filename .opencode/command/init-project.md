@@ -1,5 +1,5 @@
 ---
-description: Initialize dotnet-agent-harness context for this repository
+description: Initialize a new project with dotnet-agent-harness guidance
 ---
 Initialize dotnet-agent-harness context for this repository.
 

@@ -1,11 +1,13 @@
 ---
 name: mcp-discovery
+category: developer-experience
+subcategory: cli
 description: >-
   Discovers available MCP servers from registries and validates compatibility. Auto-discovers MCP servers from official
   registries, community sources, and local definitions. Triggers on: mcp discovery, find mcp servers, discover mcp, mcp
   registry, mcp catalog.
 targets: ['*']
-tags: ['dotnet', 'skill', 'mcp', 'discovery']
+tags: [dotnet, skill, mcp, discovery]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 license: MIT
@@ -152,7 +154,6 @@ exit 0
 | ----------------- | ----- | ------------ | ------ | ----------------- |
 | serena            | stdio | Full         | Active | Semantic analysis |
 | context7          | http  | Full         | Active | Library docs      |
-| mcp-windbg        | stdio | Windows      | Active | Debugging         |
 | microsoftdocs-mcp | http  | Full         | Active | MS Learn          |
 | deepwiki          | http  | Full         | Active | Wiki search       |
 | github            | http  | Full         | New    | GitHub API        |

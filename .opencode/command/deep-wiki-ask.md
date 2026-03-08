@@ -1,5 +1,5 @@
 ---
-description: Ask questions about the repository
+description: $1
 ---
 # /deep-wiki:ask
 

@@ -1,9 +1,11 @@
 ---
 name: dotnet-testing-strategy
+category: testing
+subcategory: fundamentals
 description: Decides how to test .NET code. Unit vs integration vs E2E decision tree, test doubles.
 license: MIT
 targets: ['*']
-tags: ['testing', 'dotnet', 'skill']
+tags: [testing, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

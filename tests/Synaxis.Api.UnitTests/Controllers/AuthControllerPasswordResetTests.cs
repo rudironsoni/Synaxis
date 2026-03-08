@@ -378,6 +378,10 @@ public sealed class AuthControllerPasswordResetTests : IDisposable
         updatedUser.PasswordChangeLockedUntil.Should().BeNull();
     }
 
+    private User CreateTestUser(bool isActive = true)
+    {
+        var organization = new Organization
+        {
             Id = Guid.NewGuid(),
             Name = "Test Organization",
             Slug = "test-org",

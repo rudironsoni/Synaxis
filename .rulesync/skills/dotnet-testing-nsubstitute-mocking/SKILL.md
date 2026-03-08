@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-nsubstitute-mocking
+category: testing
+subcategory: mocking
 description: |
   Using NSubstitute to create test doubles (Mock, Stub, Spy) specialized skill. Used when isolating external dependencies, simulating interface behavior, and validating method calls. Covers Substitute.For, Returns, Received, Throws and complete guidance.
   Keywords: mock, stub, spy, nsubstitute, mock, test double, test double, IRepository, IService, Substitute.For, Returns, Received, Throws, Arg.Any, Arg.Is, isolate dependencies, simulate external services, dependency injection testing

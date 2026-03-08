@@ -1,5 +1,5 @@
 ---
-description: Generate single wiki page with dark-mode diagrams
+description: Generate individual wiki page
 ---
 # /deep-wiki:page
 

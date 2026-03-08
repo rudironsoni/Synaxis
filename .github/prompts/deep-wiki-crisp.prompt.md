@@ -1,5 +1,5 @@
 ---
-description: 'Fast wiki generation (concise, rate-limit-friendly)'
+description: Generate crisp one-page summary
 ---
 # /deep-wiki:crisp
 

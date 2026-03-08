@@ -1,6 +1,18 @@
 ---
-description: 'Recommend platform-compatible skills, subagents, and commands through the local runtime.'
+name: dotnet-agent-harness-recommend
+description: '$1'
 targets: ['*']
+portability: copilot-gemini
+flattening-risk: low
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Grep', 'Glob', 'Bash']
+copilot:
+  description: 'Recommend skills for project'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:recommend

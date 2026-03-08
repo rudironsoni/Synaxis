@@ -1,5 +1,5 @@
 ---
-description: Generate hierarchical wiki structure as JSON
+description: Generate structured repository catalogue
 ---
 # /deep-wiki:catalogue
 

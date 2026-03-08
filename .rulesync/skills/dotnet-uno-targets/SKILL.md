@@ -1,9 +1,11 @@
 ---
 name: dotnet-uno-targets
+category: ui-frameworks
+subcategory: uno
 description: Deploys Uno Platform apps. Per-target guidance for WASM, iOS, Android, macOS, Windows, Linux.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

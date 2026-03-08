@@ -1,9 +1,11 @@
 ---
 name: wiki-page-writer
+category: developer-experience
+subcategory: cli
 description: Generates pages with dark-mode Mermaid diagrams
 license: MIT
 targets: ['claudecode', 'codexcli']
-tags: ['wiki', 'documentation', 'mermaid']
+tags: [wiki, documentation, mermaid]
 version: '1.0.0'
 author: 'microsoft'
 invocable: true

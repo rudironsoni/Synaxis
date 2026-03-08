@@ -1,9 +1,11 @@
 ---
 name: wiki-architect
+category: developer-experience
+subcategory: cli
 description: Analyzes repos and generates structured catalogues
 license: MIT
 targets: ['claudecode', 'codexcli']
-tags: ['wiki', 'architecture', 'analysis']
+tags: [wiki, architecture, analysis]
 version: '1.0.0'
 author: 'microsoft'
 invocable: true

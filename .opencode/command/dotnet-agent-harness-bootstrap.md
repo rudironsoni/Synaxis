@@ -1,7 +1,7 @@
 ---
 description: >-
   Bootstrap dotnet-agent-harness as a local .NET tool, write RuleSync config,
-  and initialize target-specific agent outputs.
+  and initialize target-specific agent outputs
 ---
 # /dotnet-agent-harness:bootstrap
 

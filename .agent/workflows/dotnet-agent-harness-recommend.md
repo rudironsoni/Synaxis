@@ -1,7 +1,5 @@
 ---
-description: >-
-  Recommend platform-compatible skills, subagents, and commands through the
-  local runtime.
+description: $1
 trigger: /dotnet-agent-harness-recommend
 turbo: true
 ---

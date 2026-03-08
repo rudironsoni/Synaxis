@@ -1,9 +1,11 @@
 ---
 name: dotnet-release-management
+category: operations
+subcategory: release
 description: Manages .NET release lifecycle. NBGV versioning, SemVer, changelogs, pre-release, branching.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

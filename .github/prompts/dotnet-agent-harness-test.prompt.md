@@ -1,5 +1,5 @@
 ---
-description: Run authored skill test cases through the local runtime.
+description: Run skill tests with coverage
 ---
 # /dotnet-agent-harness:test
 

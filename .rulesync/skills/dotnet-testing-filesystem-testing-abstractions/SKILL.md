@@ -1,5 +1,7 @@
 ---
 name: dotnet-testing-filesystem-testing-abstractions
+category: testing
+subcategory: specialized
 description: |
   Specialized skill for testing file system operations using System.IO.Abstractions. Use when you need to test File, Directory, Path operations, or simulate file system. Covers IFileSystem, MockFileSystem, file read/write testing, directory operation testing, etc.
   Keywords: file testing, filesystem, file testing, file system testing, IFileSystem, MockFileSystem, System.IO.Abstractions, File.ReadAllText, File.WriteAllText, Directory.CreateDirectory, Path.Combine, mock file system, file abstraction

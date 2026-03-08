@@ -1,9 +1,11 @@
 ---
 name: dotnet-winui
+category: ui-frameworks
+subcategory: winui
 description: Builds WinUI 3 desktop apps. Windows App SDK, XAML patterns, MSIX/unpackaged, UWP migration.
 license: MIT
 targets: ['*']
-tags: ['ui', 'dotnet', 'skill']
+tags: [ui, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

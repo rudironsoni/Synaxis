@@ -1,9 +1,11 @@
 ---
 name: dotnet-aspire-patterns
+category: architecture
+subcategory: patterns
 description: Orchestrates .NET Aspire apps. AppHost, service discovery, components, dashboard, health checks.
 license: MIT
 targets: ['*']
-tags: ['architecture', 'dotnet', 'skill']
+tags: [architecture, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

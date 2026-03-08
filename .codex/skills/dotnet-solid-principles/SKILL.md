@@ -4,7 +4,7 @@ description: >-
   Applies SOLID and DRY principles. C# anti-patterns, fixes, SRP compliance
   checks.
 metadata:
-  short-description: .NET skill guidance for cicd tasks
+  short-description: .NET skill guidance for design principles
 ---
 # dotnet-solid-principles
 

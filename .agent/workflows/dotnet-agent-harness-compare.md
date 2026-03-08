@@ -1,5 +1,5 @@
 ---
-description: Compare two toolkit catalog items through the local runtime.
+description: $1
 trigger: /dotnet-agent-harness-compare
 turbo: true
 ---

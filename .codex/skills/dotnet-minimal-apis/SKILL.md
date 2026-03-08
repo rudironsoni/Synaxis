@@ -4,7 +4,7 @@ description: >-
   Builds ASP.NET Core Minimal APIs -- route groups, filters, TypedResults,
   OpenAPI.
 metadata:
-  short-description: .NET skill guidance for api tasks
+  short-description: .NET skill guidance for web tasks
 ---
 # dotnet-minimal-apis
 

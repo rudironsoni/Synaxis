@@ -1,8 +1,10 @@
 ---
 name: dotnet-agent-harness-test-framework
+category: developer-experience
+subcategory: cli
 description: 'Comprehensive testing framework for skills'
 targets: ['*']
-tags: ['harness', 'testing', 'quality']
+tags: [harness, testing, quality]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 license: MIT

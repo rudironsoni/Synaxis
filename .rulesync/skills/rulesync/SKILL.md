@@ -11,6 +11,8 @@ codexcli:
 copilot: {}
 geminicli: {}
 antigravity: {}
+category: fundamentals
+subcategory: coding-standards
 ---
 
 # Rulesync

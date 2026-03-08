@@ -1,9 +1,11 @@
 ---
 name: dotnet-github-releases
+category: developer-experience
+subcategory: cli
 description: Creates GitHub Releases for .NET. Release creation, assets, notes, pre-release management.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

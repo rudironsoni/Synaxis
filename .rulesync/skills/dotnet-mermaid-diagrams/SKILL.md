@@ -3,7 +3,7 @@ name: dotnet-mermaid-diagrams
 description: Creates Mermaid diagrams for .NET. Architecture, sequence, class, deployment, ER, flowcharts.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true
@@ -16,6 +16,8 @@ opencode:
 copilot: {}
 geminicli: {}
 antigravity: {}
+category: fundamentals
+subcategory: coding-standards
 ---
 
 # dotnet-mermaid-diagrams

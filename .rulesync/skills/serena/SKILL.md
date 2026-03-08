@@ -1,8 +1,8 @@
 ---
 name: serena
-description:
-  This skill provides symbol-level code understanding and navigation using Language Server Protocol (LSP). Enables
-  IDE-like capabilities for finding symbols, tracking references, and making precise code edits at the symbol level.
+category: developer-experience
+subcategory: serena
+description: 'This skill provides symbol-level code understanding and navigation using Language Server Protocol (LSP). Enables IDE-like capabilities for finding symbols, tracking references, and making precise code edits at the symbol level.'
 targets: ['*']
 license: MIT
 invocable: true

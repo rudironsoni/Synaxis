@@ -49,6 +49,27 @@ Always load these skills before analysis:
    - [skill:dotnet-api-security] for API-level auth (JWT, OAuth/OIDC, passkeys)
    - [skill:dotnet-realtime-communication] for standalone SignalR patterns (hub design, scaling, backplanes)
 
+## Decision Tree
+
+```text
+Server-side or WebAssembly?
+  Server -> InteractiveServer render mode, SignalR for real-time
+  WASM -> InteractiveWebAssembly, check bundle size, lazy loading
+  Hybrid -> Auto render mode for best of both
+
+Component complexity?
+  Simple UI -> Razor components with parameters
+  Complex state -> State management (Fluxor, Rx), avoid component bloat
+
+JavaScript interop needed?
+  YES -> Minimize calls, use IJSRuntime, consider JS isolation
+  NO -> Pure Blazor implementation preferred
+
+Performance critical?
+  YES -> Virtualize long lists, render fragments, defer rendering
+  NO -> Focus on maintainability and testability
+```
+
 ## Trigger Lexicon
 
 This agent activates on Blazor-related queries including: "blazor component", "blazor app", "render mode", "interactive

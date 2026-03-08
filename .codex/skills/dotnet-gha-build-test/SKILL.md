@@ -4,7 +4,7 @@ description: >-
   Configures GitHub Actions .NET build/test -- setup-dotnet, NuGet cache,
   reporting.
 metadata:
-  short-description: .NET skill guidance for testing tasks
+  short-description: .NET skill guidance for github actions
 ---
 # dotnet-gha-build-test
 

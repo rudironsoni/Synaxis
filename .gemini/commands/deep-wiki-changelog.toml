@@ -1,4 +1,4 @@
-description = "Generate structured changelog from git commits"
+description = "$1"
 prompt = """
 # /deep-wiki:changelog
 

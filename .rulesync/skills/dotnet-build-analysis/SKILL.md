@@ -1,9 +1,11 @@
 ---
 name: dotnet-build-analysis
+category: developer-experience
+subcategory: cli
 description: Interprets MSBuild output, NuGet errors, analyzer warnings. Error codes, CI drift.
 license: MIT
 targets: ['*']
-tags: ['foundation', 'dotnet', 'skill']
+tags: [foundation, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

@@ -4,7 +4,7 @@ description: >-
   Authors xUnit v3 tests -- Facts, Theories, fixtures, parallelism,
   IAsyncLifetime.
 metadata:
-  short-description: .NET skill guidance for testing tasks
+  short-description: .NET skill guidance for xunit tasks
 ---
 # dotnet-xunit
 

@@ -4,7 +4,7 @@ description: >-
   Containerizes .NET apps. Multi-stage Dockerfiles, SDK container publish (.NET
   8+), rootless.
 metadata:
-  short-description: .NET skill guidance for architecture tasks
+  short-description: .NET skill guidance for container tasks
 ---
 # dotnet-containers
 

@@ -1,9 +1,11 @@
 ---
 name: dotnet-test-quality
+category: testing
+subcategory: fundamentals
 description: Measures test effectiveness. Coverlet code coverage, Stryker.NET mutation testing, flaky tests.
 license: MIT
 targets: ['*']
-tags: ['testing', 'dotnet', 'skill']
+tags: [testing, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

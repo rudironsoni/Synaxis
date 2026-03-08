@@ -1,5 +1,5 @@
 ---
-description: Ask questions about the repository
+description: Answer questions about repository
 ---
 # /deep-wiki:ask
 

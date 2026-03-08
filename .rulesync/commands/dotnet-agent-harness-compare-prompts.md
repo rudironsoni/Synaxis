@@ -1,6 +1,18 @@
 ---
-description: 'Compare two saved prepared-message prompt bundles by system, tool, skill, and request sections.'
+name: dotnet-agent-harness-compare-prompts
+description: '$1'
 targets: ['*']
+portability: claude-opencode
+flattening-risk: medium
+simulated: true
+version: '0.0.1'
+author: 'dotnet-agent-harness'
+claudecode:
+  allowed-tools: ['Read', 'Grep', 'Glob', 'Bash']
+copilot:
+  description: 'Compare prompt files across systems'
+codexcli:
+  sandbox_mode: 'read-only'
 ---
 
 # /dotnet-agent-harness:compare-prompts

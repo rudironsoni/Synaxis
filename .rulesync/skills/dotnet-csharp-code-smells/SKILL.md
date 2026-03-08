@@ -1,9 +1,11 @@
 ---
 name: dotnet-csharp-code-smells
+category: fundamentals
+subcategory: diagnostics
 description: Detects C# code smells during review. Anti-patterns, async misuse, DI mistakes, fixes.
 license: MIT
 targets: ['*']
-tags: ['csharp', 'dotnet', 'skill']
+tags: [csharp, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true

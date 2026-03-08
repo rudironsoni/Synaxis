@@ -1,7 +1,5 @@
 ---
-description: >-
-  Record a prompt-related incident and attach saved prepared-message evidence
-  for regression tracking.
+description: $1
 trigger: /dotnet-agent-harness-incident
 turbo: true
 ---

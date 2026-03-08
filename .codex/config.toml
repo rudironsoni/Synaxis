@@ -17,13 +17,6 @@ description = "Microsoft Learn documentation MCP"
 type = "http"
 url = "https://learn.microsoft.com/api/mcp"
 
-[mcp_servers.mcp-windbg]
-description = "WinDbg crash and dump analysis MCP"
-type = "stdio"
-command = "uvx"
-args = [ "--from", "git+https://github.com/svnscha/mcp-windbg@v0.12.2", "mcp-windbg" ]
-
-[mcp_servers.mcp-windbg.env]
 [mcp_servers.deepwiki]
 description = "DeepWiki MCP for documentation access"
 type = "http"

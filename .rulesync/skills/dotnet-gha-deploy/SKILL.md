@@ -1,9 +1,11 @@
 ---
 name: dotnet-gha-deploy
+category: operations
+subcategory: ci-cd
 description: Deploys .NET from GitHub Actions. Azure Web Apps, GitHub Pages, container registries.
 license: MIT
 targets: ['*']
-tags: ['cicd', 'dotnet', 'skill']
+tags: [cicd, dotnet, skill]
 version: '0.0.1'
 author: 'dotnet-agent-harness'
 invocable: true
