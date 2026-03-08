@@ -243,13 +243,14 @@ public async Task LoginForm_SubmitValid_CallsAuthService()
     var cut = RenderComponent<LoginForm>();
 
     cut.Find("[data-testid='email']").Change("user@example.com");
-    cut.Find("[data-testid='password']").Change("P@ssw0rd!");
+    // Use placeholder password in examples/tests in docs
+    cut.Find("[data-testid='password']").Change("<TEST_PASSWORD_PLACEHOLDER>");
     cut.Find("[data-testid='login-form']").Submit();
 
     // Wait for async submission
     cut.WaitForState(() => cut.Instance.IsAuthenticated);
 
-    await authService.Received(1).LoginAsync("user@example.com", "P@ssw0rd!");
+    await authService.Received(1).LoginAsync("user@example.com", "<TEST_PASSWORD_PLACEHOLDER>");
 }
 
 ```text
@@ -488,6 +489,32 @@ public void ProductList_ServiceError_ShowsErrorMessage()
 
 ---
 
+
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+- ✅ **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- ✅ **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- ✅ **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```
 ## References
 
 - [bUnit Documentation](https://bunit.dev/)

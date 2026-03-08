@@ -1,16 +1,12 @@
 Please also reference the following rules as needed. The list below is provided in TOON format, and `@` stands for the project root directory.
 
 rules[2]:
-  - path: @.agents/memories/10-conventions.md
+  - path: @.codex/memories/10-conventions.md
     description: "dotnet-agent-harness authoring conventions for skills, subagents, commands, and hooks"
     applyTo[1]: .rulesync/**/*
-  - path: @.agents/memories/20-workflow.md
+  - path: @.codex/memories/20-workflow.md
     description: Workflow for RuleSync-based multi-agent generation
     applyTo[1]: **/*
-
-# Additional Conventions Beyond the Built-in Functions
-
-As this project's AI coding tool, you must follow the additional conventions below, in addition to the built-in functions.
 
 # dotnet-agent-harness
 

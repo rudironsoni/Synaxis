@@ -194,7 +194,8 @@ public class UnoNavigationTests : IClassFixture<UnoWasmFixture>
 public async Task LoginForm_SubmitValid_NavigatesToDashboard()
 {
     await _page.FillAsync("[data-testid='username-input']", "testuser");
-    await _page.FillAsync("[data-testid='password-input']", "P@ssw0rd!");
+    // Use placeholder test credentials; do not expose real passwords in docs
+    await _page.FillAsync("[data-testid='password-input']", "<TEST_PASSWORD_PLACEHOLDER>");
     await _page.ClickAsync("[data-testid='login-button']");
 
     // Wait for navigation after login
@@ -312,7 +313,8 @@ public abstract class LoginTestsBase
     public async Task Login_ValidCredentials_ShowsDashboard()
     {
         await FillFieldAsync("username-input", "alice");
-        await FillFieldAsync("password-input", "P@ssw0rd!");
+        // Use placeholder test credentials in examples
+        await FillFieldAsync("password-input", "<TEST_PASSWORD_PLACEHOLDER>");
         await ClickAsync("login-button");
 
         await WaitForElementAsync("dashboard-title");
@@ -385,3 +387,30 @@ public class LoginTestsWasm : LoginTestsBase, IClassFixture<UnoWasmFixture>
 - [AutomationProperties in UWP/WinUI](https://learn.microsoft.com/en-us/windows/apps/design/accessibility/basic-accessibility-information)
 - [Uno Platform GitHub](https://github.com/unoplatform/uno)
 ````
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+
+- **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```

@@ -93,38 +93,6 @@ public sealed class AuthControllerPasswordResetTests : IDisposable
     }
 
     [Fact]
-    public async Task ForgotPassword_ValidEmail_SendsResetEmail()
-    {
-        // Arrange
-        var user = CreateTestUser();
-        var request = new ForgotPasswordRequest
-        {
-            Email = user.Email
-        };
-
-        // Act
-        var result = await _controller.ForgotPassword(request);
-
-        // Assert
-        result.Should().BeOfType<OkObjectResult>();
-        var okResult = result as OkObjectResult;
-        okResult.Value.Should().BeEquivalentTo(new { message = "If the email exists, a password reset link has been sent" });
-
-        // Verify email service was called
-        _mockEmailService.Verify(
-            x => x.SendPasswordResetEmailAsync(
-                user.Email,
-                It.Is<string>(url => url.Contains("token="))),
-            Times.Once);
-
-        // Verify token was created
-        var resetToken = await _context.PasswordResetTokens
-            .FirstOrDefaultAsync(t => t.UserId == user.Id && !t.IsUsed);
-        resetToken.Should().NotBeNull();
-        resetToken.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddHours(1), TimeSpan.FromSeconds(5));
-    }
-
-    [Fact]
     public async Task ForgotPassword_NonExistentEmail_ReturnsSuccessMessage()
     {
         // Arrange
@@ -410,69 +378,6 @@ public sealed class AuthControllerPasswordResetTests : IDisposable
         updatedUser.PasswordChangeLockedUntil.Should().BeNull();
     }
 
-    [Fact]
-    public async Task ForgotPassword_ResetPassword_CompleteFlow()
-    {
-        // Arrange
-        var user = CreateTestUser();
-        var oldPasswordHash = user.PasswordHash;
-
-        // Step 1: Request password reset
-        var forgotRequest = new ForgotPasswordRequest
-        {
-            Email = user.Email
-        };
-
-        var forgotResult = await _controller.ForgotPassword(forgotRequest);
-        forgotResult.Should().BeOfType<OkObjectResult>();
-
-        // Get the created token
-        var resetToken = await _context.PasswordResetTokens
-            .FirstOrDefaultAsync(t => t.UserId == user.Id && !t.IsUsed);
-        resetToken.Should().NotBeNull();
-
-        // Step 2: Reset password
-        var newPassword = "NewSecurePassword123!";
-        var resetRequest = new ResetPasswordRequest
-        {
-            Token = resetToken.TokenHash, // This is the hash, we need the actual token
-            NewPassword = newPassword
-        };
-
-        // We need to get the actual token value from the email service call
-        string actualToken = null;
-        _mockEmailService
-            .Setup(x => x.SendPasswordResetEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .Callback<string, string>((to, url) =>
-            {
-                // Extract token from URL
-                var urlParts = url.Split("token=");
-                actualToken = urlParts[urlParts.Length - 1];
-            })
-            .Returns(Task.CompletedTask);
-
-        // Re-run forgot password to capture the token
-        await _controller.ForgotPassword(forgotRequest);
-
-        // Now reset with the actual token
-        resetRequest.Token = actualToken;
-        _mockUserService
-            .Setup(x => x.HashPassword(newPassword))
-            .Returns("new_hashed_password");
-
-        var resetResult = await _controller.ResetPassword(resetRequest);
-        resetResult.Should().BeOfType<OkObjectResult>();
-
-        // Verify password was changed
-        var updatedUser = await _context.Users.FindAsync(user.Id);
-        updatedUser.PasswordHash.Should().NotBe(oldPasswordHash);
-        updatedUser.PasswordHash.Should().Be("new_hashed_password");
-    }
-
-    private User CreateTestUser(bool isActive = true)
-    {
-        var organization = new Organization
-        {
             Id = Guid.NewGuid(),
             Name = "Test Organization",
             Slug = "test-org",

@@ -73,6 +73,7 @@ When `GenerateDocumentationFile` is enabled, the compiler emits CS1591 warnings 
 ```csharp
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+// TODO: Audit suppression - add justification or remove
 public class InternalServiceHelper
 {
     // This type is internal-facing despite being public
@@ -142,3 +143,30 @@ For complete tag examples (summary, param, returns, exception, remarks, example,
 
 1. **Document cancellation tokens with a single standard line** -- use "A token to cancel the asynchronous operation." for all `CancellationToken` parameters. Do not over-document the cancellation pattern.
 ````
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+
+- **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```

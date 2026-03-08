@@ -1,7 +1,8 @@
 # Authoring Conventions
 
 - Keep frontmatter strictly compliant with the RuleSync spec (see `.rulesync/skills/rulesync/file-formats.md`).
-- Add platform-specific blocks only when required (`claudecode`, `opencode`, `codexcli`, `copilot`, `geminicli`).
+- Add platform-specific blocks only when required (`claudecode`, `opencode`, `codexcli`, `copilot`, `geminicli`,
+  `antigravity`).
 - Use `version: "0.0.1"` for newly ported content unless a higher semantic version is intentionally introduced.
 - Use ASCII in shell scripts and docs unless a source file already requires Unicode.
 - Keep hook scripts advisory-only and return success to avoid blocking user workflows.

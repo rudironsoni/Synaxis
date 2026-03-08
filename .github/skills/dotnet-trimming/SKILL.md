@@ -104,9 +104,11 @@ Marks a method as unsafe for trimming. The trimmer and analyzer produce IL2026 w
 [RequiresUnreferencedCode("Uses reflection to discover plugins")]
 public IPlugin LoadPlugin(string typeName)
 {
-    var type = Type.GetType(typeName)
-        ?? throw new InvalidOperationException($"Type {typeName} not found");
-    return (IPlugin)Activator.CreateInstance(type)!;
+    // Prefer factory/DI pattern for AOT/trimming compatibility
+    // Resolve via a factory or DI so the trimmer understands the type flow and avoids Activator usage.
+    // Example: register factories at startup and resolve by key/type.
+    var factory = _pluginFactory.Resolve(typeName) ?? throw new InvalidOperationException($"Type {typeName} not found");
+    return factory.Create();
 }
 
 ```text
@@ -120,10 +122,10 @@ Tells the trimmer which members of a type are accessed via reflection, so they a
 public T CreateInstance<[DynamicallyAccessedMembers(
     DynamicallyAccessedMemberTypes.PublicConstructors)] T>()
     where T : class
-    => (T)Activator.CreateInstance(typeof(T))!;
-
-// The trimmer preserves public constructors of T
-// because the constraint tells it what's needed
+    // AOT-safe alternative: use a generic factory resolved by DI
+    // Example:
+    // public T CreateInstance<T>() where T : class => _serviceProvider.GetRequiredService<T>();
+    // The trimmer understands DI-registered concrete types and avoids runtime activator calls.
 
 ```text
 
@@ -153,6 +155,7 @@ Suppresses a specific trim warning when you have verified the code is safe despi
 [UnconditionalSuppressMessage("Trimming",
     "IL2026:RequiresUnreferencedCode",
     Justification = "Type is preserved via ILLink descriptor")]
+// TODO: Audit suppression - add justification or remove
 public void CallLegacyCode() { /* ... */ }
 
 ```text
@@ -397,3 +400,30 @@ public class ServiceRegistry
 - [Trimming annotation attributes](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/prepare-libraries-for-trimming#trimming-annotation-attributes)
 - [ILLink descriptor format](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options#descriptor-format)
 ````
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+
+- **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```

@@ -9,6 +9,8 @@ tools:
   - agent/runSubagent
   - read
   - search
+  - execute
+  - edit
 ---
 # dotnet-csharp-concurrency-specialist
 

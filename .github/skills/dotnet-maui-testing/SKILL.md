@@ -187,7 +187,8 @@ public class LoginTests : IClassFixture<AppiumFixture>
         usernameField.Clear();
         usernameField.SendKeys("testuser");
         passwordField.Clear();
-        passwordField.SendKeys("P@ssw0rd!");
+        // Use placeholder password in examples
+        passwordField.SendKeys("<TEST_PASSWORD_PLACEHOLDER>");
         loginButton.Click();
 
         // Wait for navigation
@@ -282,7 +283,8 @@ public class LoginPage
 public void Login_ValidUser_ReachesHomePage()
 {
     var loginPage = new LoginPage(_driver);
-    var homePage = loginPage.Login("alice", "P@ssw0rd!");
+    // Use placeholder password in examples
+    var homePage = loginPage.Login("alice", "<TEST_PASSWORD_PLACEHOLDER>");
 
     Assert.True(homePage.IsLoaded);
 }
@@ -461,7 +463,7 @@ public static MauiApp CreateMauiApp()
   native accessibility identifier on every platform.
 - **Run tests against real emulators/simulators, not just unit tests.** MAUI rendering, navigation, and platform
   services behave differently than in-memory tests.
-- **Use explicit waits, never implicit waits or delays.** `WebDriverWait` with a condition is reliable; `Thread.Sleep`
+ - **Use explicit waits, never implicit waits or delays.** `WebDriverWait` with a condition is reliable; avoid `Thread.Sleep`.
   and implicit waits hide timing issues.
 - **Tag platform-specific tests with `[Trait]` and `Assert.SkipWhen`.** xUnit v3's native skip support allows running
   the correct tests per platform in CI without failures from unsupported features.
@@ -494,3 +496,30 @@ public static MauiApp CreateMauiApp()
 - [UIAutomator2 Driver](https://github.com/appium/appium-uiautomator2-driver)
 - [XCUITest Driver](https://github.com/appium/appium-xcuitest-driver)
 ````
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+
+- **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```

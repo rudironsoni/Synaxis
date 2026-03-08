@@ -198,6 +198,15 @@ factory patterns that use explicit construction.
 // BAD: Reflection-based creation -- breaks under AOT
 public T CreateHandler<T>() where T : class
     => (T)Activator.CreateInstance(typeof(T))!;
+// NOTE: Activator.CreateInstance uses runtime reflection and is AOT-unfriendly.
+// Prefer factory registration or explicit constructors in AOT builds. For example:
+
+// Registration:
+// services.AddSingleton<Func<Type, object>>(sp => t => ActivatorUtilities.CreateInstance(sp, t));
+
+// Better (AOT-safe):
+// services.AddSingleton<IPaymentProcessorFactory, PaymentProcessorFactory>();
+// Then resolve via factory.Create("Stripe");
 
 // GOOD: Factory with explicit registration
 public class HandlerFactory
@@ -344,6 +353,32 @@ src/
 
 ---
 
+
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+- ✅ **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- ✅ **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- ✅ **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```
 ## References
 
 - [Native AOT deployment](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)

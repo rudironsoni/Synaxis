@@ -122,7 +122,8 @@ public async Task Login_ValidCredentials_RedirectsToDashboard()
 {
     var loginPage = new LoginPage(Page);
 
-    var dashboard = await loginPage.LoginAsync("user@example.com", "P@ssw0rd!");
+    // Example uses placeholder password; do not commit real credentials
+    var dashboard = await loginPage.LoginAsync("user@example.com", "<TEST_PASSWORD_PLACEHOLDER>");
 
     Assert.NotNull(dashboard);
 }
@@ -275,14 +276,23 @@ cut.WaitForAssertion(() =>
 ```csharp
 
 // BAD: Hardcoded delay -- slow and still flaky
+// Replace with framework-native wait or deterministic polling with timeout
+/*
 await Task.Delay(3000);
 await page.ClickAsync("[data-testid='results']");
+*/
 
 // BAD: Polling with Thread.Sleep
-while (!element.IsVisible)
+// Replace with deterministic polling using Task.Delay and a timeout cancellation token
+// Example:
+/*
+var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+while (!element.IsVisible && !cts.IsCancellationRequested)
 {
-    Thread.Sleep(100); // blocks thread, no timeout safety
+    await Task.Delay(100, cts.Token);
 }
+if (!element.IsVisible) throw new TimeoutException("Element did not become visible within timeout");
+*/
 
 // GOOD: Framework-native wait
 await page.Locator("[data-testid='results']")
@@ -407,3 +417,30 @@ public async Task OrderForm_TabOrder_FollowsLogicalSequence()
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [Testing Library Guiding Principles](https://testing-library.com/docs/guiding-principles)
 ````
+
+## Code Navigation (Serena MCP)
+
+**Primary approach:** Use Serena symbol operations for efficient code navigation:
+
+1. **Find definitions**: `serena_find_symbol` instead of text search
+2. **Understand structure**: `serena_get_symbols_overview` for file organization
+3. **Track references**: `serena_find_referencing_symbols` for impact analysis
+4. **Precise edits**: `serena_replace_symbol_body` for clean modifications
+
+**When to use Serena vs traditional tools:**
+
+- **Use Serena**: Navigation, refactoring, dependency analysis, precise edits
+- **Use Read/Grep**: Reading full files, pattern matching, simple text operations
+- **Fallback**: If Serena unavailable, traditional tools work fine
+
+**Example workflow:**
+
+```text
+# Instead of:
+Read: src/Services/OrderService.cs
+Grep: "public void ProcessOrder"
+
+# Use:
+serena_find_symbol: "OrderService/ProcessOrder"
+serena_get_symbols_overview: "src/Services/OrderService.cs"
+```

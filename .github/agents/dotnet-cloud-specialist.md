@@ -11,6 +11,7 @@ tools:
   - read
   - search
   - execute
+  - edit
 ---
 # dotnet-cloud-specialist
 
