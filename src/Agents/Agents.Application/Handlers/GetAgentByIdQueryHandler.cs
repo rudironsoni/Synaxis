@@ -68,18 +68,18 @@ public class GetAgentByIdQueryHandler : IRequestHandler<GetAgentByIdQuery, Agent
         return dto;
     }
 
-    private static Contracts.V2.Common.AgentStatus MapStatus(DomainAgentStatus status)
+    private static Synaxis.Shared.Contracts.V2.Common.AgentStatus MapStatus(DomainAgentStatus status)
     {
         return status switch
         {
-            DomainAgentStatus.Idle => Contracts.V2.Common.AgentStatus.Idle,
-            DomainAgentStatus.Running => Contracts.V2.Common.AgentStatus.Running,
-            DomainAgentStatus.Paused => Contracts.V2.Common.AgentStatus.Processing,
-            DomainAgentStatus.Completed => Contracts.V2.Common.AgentStatus.Idle,
-            DomainAgentStatus.Failed => Contracts.V2.Common.AgentStatus.Error,
-            DomainAgentStatus.Active => Contracts.V2.Common.AgentStatus.Idle,
-            DomainAgentStatus.Inactive => Contracts.V2.Common.AgentStatus.Disabled,
-            _ => Contracts.V2.Common.AgentStatus.Provisioning,
+            DomainAgentStatus.Idle => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Idle,
+            DomainAgentStatus.Running => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Running,
+            DomainAgentStatus.Paused => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Processing,
+            DomainAgentStatus.Completed => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Idle,
+            DomainAgentStatus.Failed => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Error,
+            DomainAgentStatus.Active => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Idle,
+            DomainAgentStatus.Inactive => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Disabled,
+            _ => Synaxis.Shared.Contracts.V2.Common.AgentStatus.Provisioning,
         };
     }
 

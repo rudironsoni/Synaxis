@@ -20,6 +20,18 @@ public class SchemaGenerator
         return new Dictionary<string, string>();
     }
 
+    public Dictionary<string, string> GenerateV2Schemas(string path)
+    {
+        return new Dictionary<string, string>();
+    }
+
+    public Dictionary<string, string> GenerateV1Schemas(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            throw new ArgumentException("Path cannot be empty", nameof(path));
+        return new Dictionary<string, string>();
+    }
+
     public Dictionary<string, string> GenerateV1Schemas(bool includeV2)
     {
         return new Dictionary<string, string>();

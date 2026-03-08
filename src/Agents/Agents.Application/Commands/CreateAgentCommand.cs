@@ -12,4 +12,4 @@ using Synaxis.Agents.Application.DTOs;
 /// <summary>
 /// Command to create a new agent configuration.
 /// </summary>
-public sealed record CreateAgentCommand : Contracts.V2.Commands.CreateAgentCommand, IRequest<AgentDto>;
+public sealed record CreateAgentCommand : Synaxis.Shared.Contracts.V2.Commands.CreateAgentCommand, IRequest<AgentDto>;

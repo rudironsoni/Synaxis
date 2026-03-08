@@ -12,4 +12,4 @@ using Synaxis.Agents.Application.DTOs;
 /// <summary>
 /// Command to update an existing agent configuration.
 /// </summary>
-public sealed record UpdateAgentCommand : Contracts.V2.Commands.UpdateAgentCommand, IRequest<AgentDto>;
+public sealed record UpdateAgentCommand : Synaxis.Shared.Contracts.V2.Commands.UpdateAgentCommand, IRequest<AgentDto>;

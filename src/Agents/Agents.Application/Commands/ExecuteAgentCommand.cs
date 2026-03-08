@@ -11,4 +11,4 @@ using Mediator;
 /// <summary>
 /// Command to execute an agent.
 /// </summary>
-public sealed record ExecuteAgentCommand : Contracts.V2.Commands.ExecuteAgentCommand, IRequest<Guid>;
+public sealed record ExecuteAgentCommand : Synaxis.Shared.Contracts.V2.Commands.ExecuteAgentCommand, IRequest<Guid>;

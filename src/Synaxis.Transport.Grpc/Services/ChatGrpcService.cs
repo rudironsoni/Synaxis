@@ -94,7 +94,7 @@ namespace Synaxis.Transport.Grpc.Services
             };
         }
 
-        private static V1.ChatResponse MapResponse(Contracts.V1.Messages.ChatResponse response)
+        private static V1.ChatResponse MapResponse(Synaxis.Shared.Contracts.V1.Messages.ChatResponse response)
         {
             var protoResponse = new V1.ChatResponse
             {
@@ -132,7 +132,7 @@ namespace Synaxis.Transport.Grpc.Services
             return protoResponse;
         }
 
-        private static V1.ChatStreamChunk MapStreamChunk(Contracts.V1.Messages.ChatStreamChunk chunk)
+        private static V1.ChatStreamChunk MapStreamChunk(Synaxis.Shared.Contracts.V1.Messages.ChatStreamChunk chunk)
         {
             var protoChunk = new V1.ChatStreamChunk
             {

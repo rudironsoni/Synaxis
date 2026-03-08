@@ -55,7 +55,7 @@ namespace Synaxis.Transport.Grpc.Services
             return MapResponse(response);
         }
 
-        private static V1.EmbeddingsResponse MapResponse(Contracts.V1.Messages.EmbeddingResponse response)
+        private static V1.EmbeddingsResponse MapResponse(Synaxis.Shared.Contracts.V1.Messages.EmbeddingResponse response)
         {
             var protoResponse = new V1.EmbeddingsResponse
             {

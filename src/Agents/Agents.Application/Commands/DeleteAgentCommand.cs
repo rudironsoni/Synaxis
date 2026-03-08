@@ -11,4 +11,4 @@ using Mediator;
 /// <summary>
 /// Command to delete an agent configuration.
 /// </summary>
-public sealed record DeleteAgentCommand : Contracts.V2.Commands.DeleteAgentCommand, IRequest<Unit>;
+public sealed record DeleteAgentCommand : Synaxis.Shared.Contracts.V2.Commands.DeleteAgentCommand, IRequest<Unit>;

@@ -11,4 +11,4 @@ using Synaxis.Shared.Contracts.V2.DTOs;
 /// <summary>
 /// Query to get an agent by its identifier.
 /// </summary>
-public sealed record GetAgentByIdQuery : Contracts.V2.Queries.GetAgentByIdQuery, IRequest<AgentDto?>;
+public sealed record GetAgentByIdQuery : Synaxis.Shared.Contracts.V2.Queries.GetAgentByIdQuery, IRequest<AgentDto?>;

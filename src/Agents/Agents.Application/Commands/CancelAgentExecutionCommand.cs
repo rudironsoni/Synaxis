@@ -11,4 +11,4 @@ using Mediator;
 /// <summary>
 /// Command to cancel an agent execution.
 /// </summary>
-public sealed record CancelAgentExecutionCommand : Contracts.V2.Commands.CancelAgentExecutionCommand, IRequest<Unit>;
+public sealed record CancelAgentExecutionCommand : Synaxis.Shared.Contracts.V2.Commands.CancelAgentExecutionCommand, IRequest<Unit>;

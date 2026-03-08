@@ -11,4 +11,4 @@ using Synaxis.Shared.Contracts.V2.DTOs;
 /// <summary>
 /// Query to get a paginated list of agents.
 /// </summary>
-public sealed record GetAgentsQuery : Contracts.V2.Queries.GetAgentsQuery, IRequest<PaginatedResult<AgentDto>>;
+public sealed record GetAgentsQuery : Synaxis.Shared.Contracts.V2.Queries.GetAgentsQuery, IRequest<PaginatedResult<AgentDto>>;
